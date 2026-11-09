@@ -1,5 +1,5 @@
 {
-  "versao": 4,
+  "versao": 5,
   "nome": "Upper / Lower 5x por semana",
   "meta_semanal": 15,
   "grupos": {
@@ -20,16 +20,6 @@
     "obs": "~50% da carga, 10–12 reps",
     "so_em": "composto"
   },
-  "prescricao": {
-    "composto": {
-      "reps": "6–10",
-      "descanso": 90
-    },
-    "isolado": {
-      "reps": "10–15",
-      "descanso": 60
-    }
-  },
   "semana": {
     "seg": "upA",
     "ter": "loA",
@@ -44,27 +34,30 @@
       "nome": "Upper A",
       "curto": "Up A",
       "tipo": "upper",
-      "foco": "Peito, costas e braços",
+      "foco": "Peito, costas, ombro e tríceps",
       "exercicios": [
         {
-          "id": "supino-reto-barra",
-          "nome": "Supino reto com barra",
+          "id": "supino-reto-halt",
+          "nome": "Supino reto com halteres",
           "tipo": "composto",
-          "series": 4,
+          "series": 3,
+          "reps": "6–8",
           "musculos": [
-            "peito"
+            "peito",
+            "triceps"
           ],
-          "dica": "Escápulas presas no banco, barra desce na linha do mamilo.",
+          "alvo": "Peitoral / tríceps",
+          "dica": "Convergência no topo: aproxime os halteres sem bater.",
           "alternativas": [
+            {
+              "id": "supino-reto-barra",
+              "nome": "Supino reto com barra",
+              "dica": "Escápulas presas no banco, barra desce na linha do mamilo."
+            },
             {
               "id": "supino-reto-maquina",
               "nome": "Supino reto na máquina",
               "dica": "Pegada na linha do peito, não deixe o ombro subir."
-            },
-            {
-              "id": "supino-smith",
-              "nome": "Supino reto no Smith",
-              "dica": "Banco posicionado para a barra descer na linha do mamilo."
             }
           ]
         },
@@ -72,10 +65,12 @@
           "id": "remada-curvada",
           "nome": "Remada curvada com barra",
           "tipo": "composto",
-          "series": 4,
+          "series": 3,
+          "reps": "6–8",
           "musculos": [
             "costas"
           ],
+          "alvo": "Costas · espessura",
           "dica": "Tronco a ~45°, puxe a barra até o umbigo.",
           "alternativas": [
             {
@@ -91,19 +86,45 @@
           ]
         },
         {
-          "id": "puxada-frontal",
-          "nome": "Puxada frontal",
+          "id": "supino-inclinado-halt",
+          "nome": "Supino inclinado com halteres",
           "tipo": "composto",
-          "series": 4,
+          "series": 3,
+          "reps": "8–10",
+          "musculos": [
+            "peito"
+          ],
+          "alvo": "Peitoral superior",
+          "dica": "Banco a 30°, halteres descem até a linha do peito.",
+          "alternativas": [
+            {
+              "id": "supino-inclinado-barra",
+              "nome": "Supino inclinado com barra",
+              "dica": "Barra desce na parte alta do peito."
+            },
+            {
+              "id": "supino-inclinado-maquina",
+              "nome": "Supino inclinado na máquina",
+              "dica": "Banco ajustado para a pegada na linha do peito."
+            }
+          ]
+        },
+        {
+          "id": "puxada-aberta",
+          "nome": "Puxada alta na polia (pegada aberta)",
+          "tipo": "composto",
+          "series": 3,
+          "reps": "8–10",
           "musculos": [
             "costas"
           ],
-          "dica": "Pegada um pouco mais aberta que os ombros, puxe até o peito.",
+          "alvo": "Costas · largura",
+          "dica": "Peito alto, puxe a barra até a parte de cima do peito.",
           "alternativas": [
             {
-              "id": "puxada-supinada",
-              "nome": "Puxada com pegada supinada",
-              "dica": "Palmas para você, cotovelos rente ao corpo."
+              "id": "barra-fixa",
+              "nome": "Barra fixa ou puxada frontal",
+              "dica": "Leve o peito em direção à barra."
             },
             {
               "id": "puxada-maquina",
@@ -113,68 +134,50 @@
           ]
         },
         {
-          "id": "crucifixo-inclinado",
-          "nome": "Crucifixo inclinado",
+          "id": "elevacao-lateral",
+          "nome": "Elevação lateral com halteres",
           "tipo": "isolado",
           "series": 4,
+          "reps": "10–12",
           "musculos": [
-            "peito"
+            "ombros"
           ],
-          "dica": "Braços semiflexionados, alongue bem embaixo.",
+          "alvo": "Deltoide lateral",
+          "dica": "Suba até a linha do ombro.",
           "alternativas": [
             {
-              "id": "peck-deck",
-              "nome": "Peck deck (voador)",
-              "dica": "Cotovelos na altura do peito, aperte 1 segundo."
+              "id": "elevacao-lateral-maquina",
+              "nome": "Elevação lateral na máquina",
+              "dica": "Cotovelos guiam o movimento."
             },
             {
-              "id": "crossover",
-              "nome": "Crossover na polia",
-              "dica": "Mãos se encontram na frente do quadril."
+              "id": "elevacao-lateral-polia",
+              "nome": "Elevação lateral na polia",
+              "dica": "Um braço por vez, tensão constante."
             }
           ]
         },
         {
-          "id": "rosca-direta",
-          "nome": "Rosca direta com barra",
+          "id": "triceps-pulley",
+          "nome": "Tríceps pulley (barra reta ou corda)",
           "tipo": "isolado",
-          "series": 5,
-          "musculos": [
-            "biceps"
-          ],
-          "dica": "Cotovelos colados no tronco, desça em 2 segundos.",
-          "alternativas": [
-            {
-              "id": "rosca-alternada",
-              "nome": "Rosca alternada com halteres",
-              "dica": "Gire a palma para cima na subida."
-            },
-            {
-              "id": "rosca-polia",
-              "nome": "Rosca na polia baixa",
-              "dica": "Tensão constante, sem balançar."
-            }
-          ]
-        },
-        {
-          "id": "triceps-corda",
-          "nome": "Tríceps na polia com corda",
-          "tipo": "isolado",
-          "series": 5,
+          "series": 4,
+          "reps": "10–12",
           "musculos": [
             "triceps"
           ],
-          "dica": "Abra a corda no final e segure 1 segundo.",
+          "alvo": "Tríceps",
+          "dica": "Cotovelos fixos ao lado do corpo, estenda até o fim.",
           "alternativas": [
+            {
+              "id": "triceps-corda",
+              "nome": "Tríceps na polia com corda",
+              "dica": "Abra a corda no final e segure 1 segundo."
+            },
             {
               "id": "triceps-barra-v",
               "nome": "Tríceps na polia com barra V",
               "dica": "Cotovelos fixos ao lado do corpo."
-            },
-            {
-              "id": "mergulho-banco",
-              "nome": "Mergulho no banco",
-              "dica": "Desça até o cotovelo a 90°."
             }
           ]
         }
@@ -184,17 +187,19 @@
       "nome": "Lower A",
       "curto": "Low A",
       "tipo": "lower",
-      "foco": "Quadríceps e panturrilha",
+      "foco": "Quadríceps, posterior e panturrilha",
       "exercicios": [
         {
           "id": "agachamento-livre",
-          "nome": "Agachamento livre",
+          "nome": "Agachamento livre com barra",
           "tipo": "composto",
           "series": 4,
+          "reps": "6–8",
           "musculos": [
             "quadriceps",
             "gluteos"
           ],
+          "alvo": "Quadríceps e glúteos",
           "dica": "Coxa paralela ou abaixo, joelhos na linha dos pés.",
           "alternativas": [
             {
@@ -214,10 +219,12 @@
           "nome": "Leg press 45°",
           "tipo": "composto",
           "series": 4,
+          "reps": "8–10",
           "musculos": [
             "quadriceps",
             "gluteos"
           ],
+          "alvo": "Quadríceps e glúteos",
           "dica": "Lombar apoiada, não estenda os joelhos por completo.",
           "alternativas": [
             {
@@ -236,10 +243,12 @@
           "id": "extensora",
           "nome": "Cadeira extensora",
           "tipo": "isolado",
-          "series": 4,
+          "series": 3,
+          "reps": "10–12",
           "musculos": [
             "quadriceps"
           ],
+          "alvo": "Quadríceps · isolamento",
           "dica": "Segure 1 segundo no topo, controle a descida.",
           "alternativas": [
             {
@@ -259,32 +268,36 @@
           "nome": "Mesa flexora",
           "tipo": "isolado",
           "series": 4,
+          "reps": "10–12",
           "musculos": [
             "posterior"
           ],
+          "alvo": "Posteriores de coxa",
           "dica": "Quadril colado no banco, desça devagar.",
           "alternativas": [
+            {
+              "id": "cadeira-flexora",
+              "nome": "Cadeira flexora",
+              "dica": "Tronco levemente à frente para alongar mais o posterior."
+            },
             {
               "id": "flexora-deitado-halter",
               "nome": "Flexora deitado com halter",
               "dica": "Halter preso entre os pés, desça devagar."
-            },
-            {
-              "id": "stiff-unilateral",
-              "nome": "Stiff unilateral com halter",
-              "dica": "Quadril nivelado, alongue o posterior."
             }
           ]
         },
         {
-          "id": "panturrilha-pe",
-          "nome": "Panturrilha em pé",
+          "id": "gemeos-pe",
+          "nome": "Gêmeos em pé (Smith ou máquina)",
           "tipo": "isolado",
-          "series": 8,
+          "series": 4,
+          "reps": "12–15",
           "musculos": [
             "panturrilha"
           ],
-          "dica": "Pausa de 2 segundos alongado embaixo.",
+          "alvo": "Panturrilha · gastrocnêmio",
+          "dica": "Pausa de 2 segundos alongado embaixo, suba o máximo.",
           "alternativas": [
             {
               "id": "panturrilha-leg",
@@ -304,60 +317,18 @@
       "nome": "Upper B",
       "curto": "Up B",
       "tipo": "upper",
-      "foco": "Ombros, costas e braços",
+      "foco": "Ombros, costas, peito e braços",
       "exercicios": [
         {
-          "id": "barra-fixa",
-          "nome": "Barra fixa ou puxada frontal",
-          "tipo": "composto",
-          "series": 4,
-          "musculos": [
-            "costas"
-          ],
-          "dica": "Leve o peito em direção à barra.",
-          "alternativas": [
-            {
-              "id": "puxada-neutra",
-              "nome": "Puxada com pegada neutra",
-              "dica": "Puxe até o queixo, cotovelos para baixo."
-            },
-            {
-              "id": "puxada-unilateral",
-              "nome": "Puxada unilateral na polia",
-              "dica": "Anote a carga e reps de um lado."
-            }
-          ]
-        },
-        {
-          "id": "supino-inclinado-halt",
-          "nome": "Supino inclinado com halteres",
-          "tipo": "composto",
-          "series": 4,
-          "musculos": [
-            "peito"
-          ],
-          "dica": "Banco a 30°, halteres descem até a linha do peito.",
-          "alternativas": [
-            {
-              "id": "supino-inclinado-barra",
-              "nome": "Supino inclinado com barra",
-              "dica": "Barra desce na parte alta do peito."
-            },
-            {
-              "id": "supino-inclinado-maquina",
-              "nome": "Supino inclinado na máquina",
-              "dica": "Banco ajustado para a pegada na linha do peito."
-            }
-          ]
-        },
-        {
           "id": "desenv-halteres",
-          "nome": "Desenvolvimento com halteres",
+          "nome": "Desenvolvimento sentado com halteres",
           "tipo": "composto",
           "series": 4,
+          "reps": "8–10",
           "musculos": [
             "ombros"
           ],
+          "alvo": "Deltoide anterior e lateral",
           "dica": "Cotovelos levemente à frente, não trave no topo.",
           "alternativas": [
             {
@@ -373,68 +344,122 @@
           ]
         },
         {
-          "id": "elevacao-lateral",
-          "nome": "Elevação lateral",
+          "id": "remada-baixa-neutra",
+          "nome": "Remada baixa na polia (pegada neutra)",
+          "tipo": "composto",
+          "series": 4,
+          "reps": "8–10",
+          "musculos": [
+            "costas"
+          ],
+          "alvo": "Romboides e dorsal",
+          "dica": "Tronco parado, puxe com os cotovelos e junte as escápulas.",
+          "alternativas": [
+            {
+              "id": "remada-pronada-polia",
+              "nome": "Remada aberta na polia",
+              "dica": "Cotovelos abertos, puxe até o peito."
+            },
+            {
+              "id": "remada-maquina",
+              "nome": "Remada articulada na máquina",
+              "dica": "Peito no apoio, segure 1 segundo atrás."
+            }
+          ]
+        },
+        {
+          "id": "peck-deck",
+          "nome": "Peck deck (voador peitoral)",
+          "tipo": "isolado",
+          "series": 3,
+          "reps": "10–12",
+          "musculos": [
+            "peito"
+          ],
+          "alvo": "Peitoral · isolamento",
+          "dica": "Cotovelos na altura do peito, aperte 1 segundo.",
+          "alternativas": [
+            {
+              "id": "crossover",
+              "nome": "Crossover na polia",
+              "dica": "Mãos se encontram na frente do quadril."
+            },
+            {
+              "id": "crucifixo-inclinado",
+              "nome": "Crucifixo inclinado",
+              "dica": "Braços semiflexionados, alongue bem embaixo."
+            }
+          ]
+        },
+        {
+          "id": "rosca-direta-halt",
+          "nome": "Rosca direta com halteres",
           "tipo": "isolado",
           "series": 4,
+          "reps": "8–10",
+          "musculos": [
+            "biceps"
+          ],
+          "alvo": "Bíceps",
+          "dica": "Cotovelos colados no tronco, desça em 2 segundos.",
+          "alternativas": [
+            {
+              "id": "rosca-direta",
+              "nome": "Rosca direta com barra",
+              "dica": "Cotovelos colados no tronco, desça em 2 segundos."
+            },
+            {
+              "id": "rosca-polia",
+              "nome": "Rosca na polia baixa",
+              "dica": "Tensão constante, sem balançar."
+            }
+          ]
+        },
+        {
+          "id": "triceps-testa-halt",
+          "nome": "Tríceps testa com halteres (ou polia)",
+          "tipo": "isolado",
+          "series": 4,
+          "reps": "10–12",
+          "musculos": [
+            "triceps"
+          ],
+          "alvo": "Tríceps · cabeça longa",
+          "dica": "Cotovelos apontando para cima, alongue bem atrás.",
+          "alternativas": [
+            {
+              "id": "triceps-testa",
+              "nome": "Tríceps testa com barra W",
+              "dica": "Barra vai para trás da cabeça, cotovelos fixos."
+            },
+            {
+              "id": "triceps-frances",
+              "nome": "Tríceps francês com halter",
+              "dica": "Cotovelos para cima, alongue atrás da cabeça."
+            }
+          ]
+        },
+        {
+          "id": "elevacao-lateral-polia",
+          "nome": "Elevação lateral na polia",
+          "tipo": "isolado",
+          "series": 4,
+          "reps": "12–15",
           "musculos": [
             "ombros"
           ],
-          "dica": "Suba até a linha do ombro.",
+          "alvo": "Deltoide lateral",
+          "dica": "Um braço por vez, tensão constante.",
           "alternativas": [
             {
-              "id": "elevacao-lateral-polia",
-              "nome": "Elevação lateral na polia",
-              "dica": "Um braço por vez, tensão constante."
+              "id": "elevacao-lateral",
+              "nome": "Elevação lateral",
+              "dica": "Suba até a linha do ombro."
             },
             {
               "id": "elevacao-lateral-maquina",
               "nome": "Elevação lateral na máquina",
               "dica": "Cotovelos guiam o movimento."
-            }
-          ]
-        },
-        {
-          "id": "rosca-martelo",
-          "nome": "Rosca martelo",
-          "tipo": "isolado",
-          "series": 5,
-          "musculos": [
-            "biceps"
-          ],
-          "dica": "Pegada neutra, sem balançar o tronco.",
-          "alternativas": [
-            {
-              "id": "rosca-martelo-corda",
-              "nome": "Rosca martelo na polia com corda",
-              "dica": "Cotovelos fixos ao lado do corpo."
-            },
-            {
-              "id": "rosca-inversa",
-              "nome": "Rosca inversa com barra",
-              "dica": "Pegada pronada, punho firme."
-            }
-          ]
-        },
-        {
-          "id": "triceps-frances",
-          "nome": "Tríceps francês com halter",
-          "tipo": "isolado",
-          "series": 5,
-          "musculos": [
-            "triceps"
-          ],
-          "dica": "Cotovelos para cima, alongue atrás da cabeça.",
-          "alternativas": [
-            {
-              "id": "triceps-overhead-polia",
-              "nome": "Tríceps acima da cabeça na polia",
-              "dica": "De costas para a polia, alongue bem."
-            },
-            {
-              "id": "triceps-coice",
-              "nome": "Tríceps coice com halter",
-              "dica": "Braço paralelo ao chão, estenda até o fim."
             }
           ]
         }
@@ -444,22 +469,25 @@
       "nome": "Lower B",
       "curto": "Low B",
       "tipo": "lower",
-      "foco": "Posterior e glúteos",
+      "foco": "Posterior, glúteos e panturrilha",
       "exercicios": [
         {
-          "id": "terra-romeno",
-          "nome": "Levantamento terra romeno",
+          "id": "stiff",
+          "nome": "Stiff com halteres ou barra",
           "tipo": "composto",
-          "series": 5,
+          "series": 4,
+          "reps": "8–10",
           "musculos": [
-            "posterior"
+            "posterior",
+            "gluteos"
           ],
-          "dica": "Quadril para trás, barra rente à perna, coluna neutra.",
+          "alvo": "Posteriores e glúteos",
+          "dica": "Joelhos levemente flexionados, quadril para trás, coluna neutra.",
           "alternativas": [
             {
-              "id": "stiff-halteres",
-              "nome": "Stiff com halteres",
-              "dica": "Joelhos levemente flexionados, alongue o posterior."
+              "id": "terra-romeno",
+              "nome": "Levantamento terra romeno",
+              "dica": "Quadril para trás, barra rente à perna, coluna neutra."
             },
             {
               "id": "good-morning",
@@ -469,42 +497,22 @@
           ]
         },
         {
-          "id": "hip-thrust",
-          "nome": "Elevação pélvica (hip thrust)",
-          "tipo": "composto",
-          "series": 4,
-          "musculos": [
-            "gluteos"
-          ],
-          "dica": "Queixo para baixo, segure 1 segundo no topo.",
-          "alternativas": [
-            {
-              "id": "hip-thrust-maquina",
-              "nome": "Elevação pélvica na máquina",
-              "dica": "Segure 1 segundo no topo."
-            },
-            {
-              "id": "ponte-gluteo",
-              "nome": "Ponte de glúteo com barra",
-              "dica": "Do chão, contraia forte no topo."
-            }
-          ]
-        },
-        {
-          "id": "bulgaro",
-          "nome": "Agachamento búlgaro",
+          "id": "afundo",
+          "nome": "Afundo com halteres (ou passada)",
           "tipo": "composto",
           "series": 3,
+          "reps": "10 por perna",
           "musculos": [
             "quadriceps",
             "gluteos"
           ],
+          "alvo": "Quadríceps e glúteos",
           "dica": "Anote a carga de um halter e as reps de uma perna.",
           "alternativas": [
             {
-              "id": "afundo-caminhando",
-              "nome": "Afundo caminhando",
-              "dica": "Anote as reps de uma perna."
+              "id": "bulgaro",
+              "nome": "Agachamento búlgaro",
+              "dica": "Anote a carga de um halter e as reps de uma perna."
             },
             {
               "id": "subida-banco",
@@ -517,10 +525,12 @@
           "id": "cadeira-flexora",
           "nome": "Cadeira flexora",
           "tipo": "isolado",
-          "series": 6,
+          "series": 4,
+          "reps": "10–12",
           "musculos": [
             "posterior"
           ],
+          "alvo": "Posteriores · isolamento",
           "dica": "Tronco levemente à frente para alongar mais o posterior.",
           "alternativas": [
             {
@@ -536,14 +546,40 @@
           ]
         },
         {
-          "id": "panturrilha-sentado",
-          "nome": "Panturrilha sentado",
+          "id": "hip-thrust",
+          "nome": "Elevação pélvica com barra",
+          "tipo": "composto",
+          "series": 3,
+          "reps": "8–10",
+          "musculos": [
+            "gluteos"
+          ],
+          "alvo": "Glúteo máximo",
+          "dica": "Queixo para baixo, segure 1 segundo no topo.",
+          "alternativas": [
+            {
+              "id": "hip-thrust-maquina",
+              "nome": "Elevação pélvica na máquina",
+              "dica": "Segure 1 segundo no topo."
+            },
+            {
+              "id": "ponte-gluteo",
+              "nome": "Ponte de glúteo com barra",
+              "dica": "Do chão, contraia forte no topo."
+            }
+          ]
+        },
+        {
+          "id": "gemeos-sentado",
+          "nome": "Gêmeos sentado (cavalinho)",
           "tipo": "isolado",
-          "series": 7,
+          "series": 4,
+          "reps": "12–15",
           "musculos": [
             "panturrilha"
           ],
-          "dica": "Pausa de 2 segundos embaixo, suba o máximo.",
+          "alvo": "Panturrilha · sóleo",
+          "dica": "Pausa embaixo, suba o máximo.",
           "alternativas": [
             {
               "id": "panturrilha-leg",
@@ -563,60 +599,18 @@
       "nome": "Upper C",
       "curto": "Up C",
       "tipo": "upper",
-      "foco": "Ombros, peito e braços",
+      "foco": "Costas, peito, ombros e bíceps",
       "exercicios": [
         {
-          "id": "desenv-militar",
-          "nome": "Desenvolvimento militar com barra",
+          "id": "serrote",
+          "nome": "Remada unilateral com halter (serrote)",
           "tipo": "composto",
           "series": 4,
-          "musculos": [
-            "ombros"
-          ],
-          "dica": "Glúteo e abdômen firmes, cabeça passa por baixo da barra.",
-          "alternativas": [
-            {
-              "id": "desenv-smith",
-              "nome": "Desenvolvimento no Smith",
-              "dica": "Sentado, barra desce até o queixo."
-            },
-            {
-              "id": "desenv-halteres-pe",
-              "nome": "Desenvolvimento com halteres em pé",
-              "dica": "Abdômen firme, sem arquear a lombar."
-            }
-          ]
-        },
-        {
-          "id": "supino-reto-halt",
-          "nome": "Supino reto com halteres",
-          "tipo": "composto",
-          "series": 3,
-          "musculos": [
-            "peito"
-          ],
-          "dica": "Desça mais fundo que na barra.",
-          "alternativas": [
-            {
-              "id": "flexao-carga",
-              "nome": "Flexão de braço com carga",
-              "dica": "Anilha nas costas, corpo alinhado."
-            },
-            {
-              "id": "supino-declinado",
-              "nome": "Supino declinado",
-              "dica": "Barra desce na parte baixa do peito."
-            }
-          ]
-        },
-        {
-          "id": "serrote",
-          "nome": "Remada unilateral (serrote)",
-          "tipo": "composto",
-          "series": 3,
+          "reps": "8–10",
           "musculos": [
             "costas"
           ],
+          "alvo": "Latíssimo do dorso",
           "dica": "Anote a carga e as reps de um lado.",
           "alternativas": [
             {
@@ -632,19 +626,117 @@
           ]
         },
         {
-          "id": "face-pull",
-          "nome": "Face pull",
-          "tipo": "isolado",
+          "id": "supino-reto-halt",
+          "nome": "Supino reto com halteres",
+          "tipo": "composto",
           "series": 3,
+          "reps": "8–10",
+          "musculos": [
+            "peito"
+          ],
+          "alvo": "Peitoral · volume e estabilização",
+          "dica": "Desça controlando, mantenha os halteres estáveis.",
+          "alternativas": [
+            {
+              "id": "supino-reto-barra",
+              "nome": "Supino reto com barra",
+              "dica": "Escápulas presas no banco, barra desce na linha do mamilo."
+            },
+            {
+              "id": "supino-reto-maquina",
+              "nome": "Supino reto na máquina",
+              "dica": "Pegada na linha do peito, não deixe o ombro subir."
+            }
+          ]
+        },
+        {
+          "id": "puxada-neutra",
+          "nome": "Puxada alta (pegada neutra ou fechada)",
+          "tipo": "composto",
+          "series": 3,
+          "reps": "8–10",
+          "musculos": [
+            "costas"
+          ],
+          "alvo": "Latíssimo / costas",
+          "dica": "Puxe até o queixo, cotovelos para baixo.",
+          "alternativas": [
+            {
+              "id": "puxada-supinada",
+              "nome": "Puxada com pegada supinada",
+              "dica": "Palmas para você, cotovelos rente ao corpo."
+            },
+            {
+              "id": "puxada-unilateral",
+              "nome": "Puxada unilateral na polia",
+              "dica": "Anote a carga e reps de um lado."
+            }
+          ]
+        },
+        {
+          "id": "elevacao-lateral",
+          "nome": "Elevação lateral com halteres",
+          "tipo": "isolado",
+          "series": 4,
+          "reps": "12–15",
           "musculos": [
             "ombros"
           ],
-          "dica": "Puxe a corda até a testa, cotovelos altos.",
+          "alvo": "Deltoide lateral",
+          "dica": "Suba até a linha do ombro.",
           "alternativas": [
             {
-              "id": "crucifixo-invertido",
-              "nome": "Crucifixo invertido na máquina",
-              "dica": "Braços quase retos, abra até a linha do ombro."
+              "id": "elevacao-lateral-maquina",
+              "nome": "Elevação lateral na máquina",
+              "dica": "Cotovelos guiam o movimento."
+            },
+            {
+              "id": "elevacao-lateral-polia",
+              "nome": "Elevação lateral na polia",
+              "dica": "Um braço por vez, tensão constante."
+            }
+          ]
+        },
+        {
+          "id": "rosca-martelo",
+          "nome": "Rosca martelo com halteres",
+          "tipo": "isolado",
+          "series": 4,
+          "reps": "10–12",
+          "musculos": [
+            "biceps"
+          ],
+          "alvo": "Braquial e antebraço",
+          "dica": "Pegada neutra, sem balançar o tronco.",
+          "alternativas": [
+            {
+              "id": "rosca-martelo-corda",
+              "nome": "Rosca martelo na polia com corda",
+              "dica": "Cotovelos fixos ao lado do corpo."
+            },
+            {
+              "id": "rosca-inversa",
+              "nome": "Rosca inversa com barra",
+              "dica": "Pegada pronada, punho firme."
+            }
+          ]
+        },
+        {
+          "id": "crucifixo-invertido",
+          "nome": "Crucifixo invertido no peck deck",
+          "tipo": "isolado",
+          "series": 4,
+          "reps": "12–15",
+          "musculos": [
+            "ombros"
+          ],
+          "alvo": "Deltoide posterior",
+          "dica": "Braços quase retos, abra até a linha do ombro.",
+          "alternativas": [
+            {
+              "id": "face-pull",
+              "nome": "Face pull",
+              "dica": "Puxe a corda até a testa, cotovelos altos."
             },
             {
               "id": "elevacao-posterior",
@@ -652,52 +744,12 @@
               "dica": "Tronco inclinado, cotovelos levemente flexionados."
             }
           ]
-        },
-        {
-          "id": "rosca-scott",
-          "nome": "Rosca Scott",
-          "tipo": "isolado",
-          "series": 5,
-          "musculos": [
-            "biceps"
-          ],
-          "dica": "Não estenda totalmente o cotovelo embaixo.",
-          "alternativas": [
-            {
-              "id": "rosca-concentrada",
-              "nome": "Rosca concentrada",
-              "dica": "Cotovelo apoiado na coxa, suba devagar."
-            },
-            {
-              "id": "rosca-banco-inclinado",
-              "nome": "Rosca no banco inclinado",
-              "dica": "Braços pendurados atrás do tronco."
-            }
-          ]
-        },
-        {
-          "id": "triceps-testa",
-          "nome": "Tríceps testa com barra W",
-          "tipo": "isolado",
-          "series": 5,
-          "musculos": [
-            "triceps"
-          ],
-          "dica": "Barra vai para trás da cabeça, cotovelos fixos.",
-          "alternativas": [
-            {
-              "id": "paralelas",
-              "nome": "Mergulho nas paralelas",
-              "dica": "Tronco reto para focar no tríceps."
-            },
-            {
-              "id": "supino-fechado",
-              "nome": "Supino fechado",
-              "dica": "Mãos na largura dos ombros, cotovelos rentes."
-            }
-          ]
         }
       ]
     }
+  },
+  "descanso": {
+    "composto": 90,
+    "isolado": 60
   }
 }

@@ -109,6 +109,14 @@ button{cursor:pointer}
 .vol-i u{display:block;height:100%;background:var(--upper);text-decoration:none}
 .vol-i.hit u{background:var(--ok)}
 .vol-i em{font-style:normal;font-size:11px;color:var(--muted)}
+.own{display:flex;gap:6px;margin-top:2px}
+.own input{flex:1;min-width:0;height:36px;border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:0 14px;font-size:14px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)}
+.adj{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted)}
+.adj b{font-family:var(--display);font-size:22px;color:var(--ink);min-width:18px;text-align:center;font-variant-numeric:tabular-nums}
+.adj input{width:96px;height:32px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-weight:600}
+.adj span:nth-of-type(2){margin-left:10px}
+.step{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:18px;line-height:1}
+[data-reset]{margin-top:8px}
 .rest-edit{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:8px}
 .rest-edit input{width:64px;height:30px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -206,19 +214,28 @@ function progress(s){
   return {done, total};
 }
 /* exercício de cada posição: escolha do dia, senão a última variação usada nesse treino, senão o original */
+/* valor de uma posição do treino: o do dia, senão o último usado nesse treino */
+function inherited(s, w, field, i){
+  const r = S.days[s];
+  if (r && r[field] && r[field][i] != null) return r[field][i];
+  let best = null;
+  for (const k in S.days){ const d = S.days[k]; if (k < s && d.treino === w.id && d[field] && d[field][i] != null && (!best || k > best)) best = k; }
+  return best ? S.days[best][field][i] : null;
+}
+const slug = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);
+/* exercício de cada posição: troca/ajuste do dia, senão a última escolha nesse treino, senão o original */
 function exFor(s, w, i){
   const base = w.exercicios[i];
   const opts = [{id:base.id, nome:base.nome, dica:base.dica}].concat(base.alternativas || []);
-  let pick = null;
-  const r = S.days[s];
-  if (r && r.trocas && r.trocas[i]) pick = r.trocas[i];
-  else {
-    let best = null;
-    for (const k in S.days){ const d = S.days[k]; if (k < s && d.treino === w.id && d.trocas && d.trocas[i] && (!best || k > best)) best = k; }
-    if (best) pick = S.days[best].trocas[i];
-  }
-  const o = opts.find(x=>x.id===pick) || opts[0];
-  return Object.assign({}, o, {tipo: base.tipo, series: base.series, musculos: base.musculos, opts});
+  const pick = inherited(s, w, 'trocas', i);
+  let o, custom = false;
+  if (pick && pick.indexOf('custom:') === 0){
+    const nome = pick.slice(7); custom = true;
+    o = {id:'c-'+slug(nome), nome, dica:'Exercício que você cadastrou.'};
+  } else o = opts.find(x=>x.id===pick) || opts[0];
+  const aj = inherited(s, w, 'ajustes', i) || {};
+  return Object.assign({}, o, {tipo: base.tipo, series: aj.series || base.series, reps: aj.reps || base.reps,
+    baseSeries: base.series, baseReps: base.reps, alvo: base.alvo, musculos: base.musculos, opts, custom});
 }
 /* últimos números registrados para este exercício antes desta data */
 function lastFor(s, exId){
@@ -340,18 +357,22 @@ function renderDay(s){
     + (S.pickOpen ? '<div style="margin-top:10px">'+picker+'</div>' : '') + '</div>';
   w.exercicios.forEach((_,i)=>{
     const e = exFor(s,w,i);
-    const pr = P.prescricao[e.tipo], r = exRec(s,e,false), lr = lastFor(s, e.id), rows = rowsFor(e);
+    const pr = {descanso: P.descanso[e.tipo]}, r = exRec(s,e,false), lr = lastFor(s, e.id), rows = rowsFor(e);
     const sets = rows.map((_,ri)=> r && r.sets[ri] || blank());
     const complete = sets.every(x=>x.ok);
     const key = s+'-'+e.id;
     const okey = s+'-'+i;
     h += '<article class="ex '+kind(w)+(complete?' complete':'')+'" data-ex="'+e.id+'" data-slot="'+i+'">'
-      + '<div class="ex-top"><h2><span>'+(i+1)+'</span>'+esc(e.nome)+'</h2><button class="info" data-info aria-expanded="'+!!S.open[okey]+'">'+(S.open[okey]?'fechar':'variar')+'</button></div>'
-      + '<div class="presc"><b>'+e.series+' × '+pr.reps+'</b>'+(rows[0].warm?' + aquec.':'')+' · descanso '+fmtTime((r&&parseInt(r.rest,10))||pr.descanso)+'</div>'
+      + '<div class="ex-top"><h2><span>'+(i+1)+'</span>'+esc(e.nome)+'</h2><button class="info" data-info aria-expanded="'+!!S.open[okey]+'">'+(S.open[okey]?'fechar':'alterar')+'</button></div>'
+      + '<div class="presc"><b>'+e.series+' × '+esc(e.reps)+'</b>'+(rows[0].warm?' + aquec.':'')+' · '+esc(e.alvo)+' · descanso '+fmtTime((r&&parseInt(r.rest,10))||pr.descanso)+'</div>'
       + (S.open[okey] ? '<div class="tip">'+esc(e.dica)+(rows[0].warm?'<br>Aquecimento: '+esc(P.aquecimento.obs)+'.':'')+'<br>Conta para: '+e.musculos.map(m=>P.grupos[m]).join(' e ')+'.</div>'
           + '<div class="swap"><span>Trocar por</span><div class="chips">'
-          + e.opts.map(o=>'<button class="pill" data-swap="'+o.id+'" aria-pressed="'+(o.id===e.id)+'">'+esc(o.nome)+'</button>').join('')
-          + '</div></div>'
+          + e.opts.map(o=>'<button class="pill" data-swap="'+o.id+'" aria-pressed="'+(!e.custom && o.id===e.id)+'">'+esc(o.nome)+'</button>').join('')
+          + (e.custom ? '<button class="pill" aria-pressed="true">'+esc(e.nome)+'</button>' : '')
+          + '</div><div class="own"><input id="own-'+okey+'" data-own placeholder="Outro exercício: digite o nome" autocomplete="off"><button class="pill" data-own-ok>Usar</button></div></div>'
+          + '<div class="adj"><span>Séries</span><button class="step" data-ser="-1" aria-label="Menos uma série">−</button><b>'+e.series+'</b><button class="step" data-ser="1" aria-label="Mais uma série">+</button>'
+          + '<span>Reps</span><input id="reps-'+okey+'" data-reps value="'+esc(e.reps)+'" autocomplete="off" aria-label="Repetições alvo"></div>'
+          + ((e.id!==e.opts[0].id || e.custom || e.series!==e.baseSeries || e.reps!==e.baseReps) ? '<button class="info" data-reset>voltar ao original</button>' : '')
           + '<label class="rest-edit">Meu descanso <input id="rest-'+key+'" data-rest inputmode="numeric" value="'+esc(r&&r.rest||'')+'" placeholder="'+pr.descanso+'"> s</label>' : '')
       + '<div class="rows">';
     rows.forEach((sd,si)=>{
@@ -388,6 +409,22 @@ app.addEventListener('click', ev=>{
   const exEl = t.closest('[data-ex]'); if (!exEl) return;
   const s = route(), exId = exEl.dataset.ex, slot = exEl.dataset.slot;
   if (t.closest('[data-info]')){ const k = s+'-'+slot; S.open[k] = !S.open[k]; render(); return; }
+  const setSlot = (field, val)=>{ const rec = dayRec(s, true); rec[field] = rec[field] || {}; rec[field][slot] = val; save(s); render(); };
+  if (t.closest('[data-own-ok]')){
+    const v = exEl.querySelector('[data-own]').value.trim().replace(/\s+/g,' ').slice(0,60);
+    if (v) setSlot('trocas', 'custom:'+v); return;
+  }
+  const ser = t.closest('[data-ser]');
+  if (ser){
+    const e = exFor(s, workoutOn(s), +slot);
+    setSlot('ajustes', {series: Math.max(1, Math.min(10, e.series + Number(ser.dataset.ser))), reps: e.reps}); return;
+  }
+  if (t.closest('[data-reset]')){
+    const base = workoutOn(s).exercicios[+slot], rec = dayRec(s, true);
+    rec.trocas = rec.trocas || {}; rec.trocas[slot] = base.id;
+    rec.ajustes = rec.ajustes || {}; rec.ajustes[slot] = {series: base.series, reps: base.reps};
+    save(s); render(); return;
+  }
   const sw = t.closest('[data-swap]');
   if (sw){
     const rec = dayRec(s, true); rec.trocas = rec.trocas || {}; rec.trocas[slot] = sw.dataset.swap;
@@ -401,7 +438,7 @@ app.addEventListener('click', ev=>{
     }
     x.ok = !x.ok; save(s); render();
     if (x.ok){
-      startTimer(rowsFor(e)[i].warm ? P.aquecimento.descanso : (parseInt(r.rest,10) || P.prescricao[e.tipo].descanso));
+      startTimer(rowsFor(e)[i].warm ? P.aquecimento.descanso : (parseInt(r.rest,10) || P.descanso[e.tipo]));
     }
   }
 });
@@ -409,11 +446,19 @@ app.addEventListener('input', ev=>{
   const t = ev.target, s = route(); if (!s) return;
   if (t.dataset.note !== undefined){ dayRec(s,true).note = t.value; save(s); return; }
   const exEl = t.closest('[data-ex]'); if (!exEl) return;
+  if (t.dataset.own !== undefined) return;
+  if (t.dataset.reps !== undefined){
+    const e = exFor(s, workoutOn(s), +exEl.dataset.slot), rec = dayRec(s, true);
+    rec.ajustes = rec.ajustes || {}; rec.ajustes[exEl.dataset.slot] = {series: e.series, reps: t.value.trim().slice(0,20) || e.baseReps};
+    save(s); return;
+  }
   const r = exRec(s, exFor(s, workoutOn(s), +exEl.dataset.slot), true);
   if (t.dataset.rest !== undefined) r.rest = t.value.trim();
   else r.sets[+t.dataset.i][t.dataset.f] = t.value.trim();
   save(s);
 });
+app.addEventListener('change', ev=>{ if (ev.target.dataset.reps !== undefined) render(); });
+app.addEventListener('keydown', ev=>{ if (ev.key==='Enter' && ev.target.dataset.own !== undefined){ ev.preventDefault(); ev.target.parentElement.querySelector('[data-own-ok]').click(); } });
 window.addEventListener('hashchange', ()=>{ S.pickOpen = false; render(); window.scrollTo(0,0); });
 
 /* ---------- Cronômetro ---------- */

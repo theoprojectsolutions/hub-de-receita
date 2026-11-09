@@ -7,29 +7,34 @@ App para celular com um programa Upper/Lower de 5 treinos por semana (~1h).
 
 ## Estrutura do treino
 
-Meta: **15 séries válidas por semana para cada grupo muscular** (peito, costas, ombros, bíceps,
-tríceps, quadríceps, posterior, glúteos e panturrilha). Cada série válida conta 1 para cada grupo
-listado em `musculos` do exercício (ex.: agachamento conta para quadríceps e glúteos).
-Aquecimento não conta. O app mostra o placar da semana abaixo do calendário.
+| Dia | Treino | Exercícios | Séries válidas |
+|-----|--------|-----------|----------------|
+| Seg | Upper A | Supino reto halteres 3×6–8 · Remada curvada 3×6–8 · Supino inclinado halteres 3×8–10 · Puxada aberta 3×8–10 · Elevação lateral 4×10–12 · Tríceps pulley 4×10–12 | 20 |
+| Ter | Lower A | Agachamento livre 4×6–8 · Leg press 45° 4×8–10 · Extensora 3×10–12 · Mesa flexora 4×10–12 · Gêmeos em pé 4×12–15 | 19 |
+| Qua | Upper B | Desenvolvimento halteres 4×8–10 · Remada baixa neutra 4×8–10 · Peck deck 3×10–12 · Rosca direta halteres 4×8–10 · Tríceps testa 4×10–12 · Elevação lateral polia 4×12–15 | 23 |
+| Qui | Descanso | | |
+| Sex | Lower B | Stiff 4×8–10 · Afundo 3×10/perna · Cadeira flexora 4×10–12 · Elevação pélvica 3×8–10 · Gêmeos sentado 4×12–15 | 18 |
+| Sáb | Upper C | Serrote 4×8–10 · Supino reto halteres 3×8–10 · Puxada neutra 3×8–10 · Elevação lateral 4×12–15 · Rosca martelo 4×10–12 · Crucifixo invertido 4×12–15 | 22 |
+| Dom | Descanso | | |
 
-| Dia | Treino | Exercícios | Séries válidas | Tempo estimado |
-|-----|--------|-----------|----------------|----------------|
-| Seg | Upper A (peito, costas e braços) | 6 | 26 | ~59 min |
-| Ter | Lower A (quadríceps e panturrilha) | 5 | 24 | ~52 min |
-| Qua | Upper B (ombros, costas e braços) | 6 | 26 | ~59 min |
-| Qui | Descanso | | | |
-| Sex | Lower B (posterior e glúteos) | 5 | 25 | ~57 min |
-| Sáb | Upper C (ombros, peito e braços) | 6 | 23 | ~53 min |
-| Dom | Descanso | | | |
+Exercícios compostos têm 1 série de aquecimento antes das válidas (não conta no volume).
+Descanso: 90 s nos compostos, 60 s nos isolados.
 
-Compostos: 1 aquecimento + 3 a 5 séries válidas de 6–10 reps, 90 s de descanso.
-Isolados: 3 a 8 séries válidas de 10–15 reps, 60 s de descanso.
+Volume semanal por grupo (séries válidas): peito 12, costas 17, ombros 20, bíceps 8,
+tríceps 11, quadríceps 14, posterior 12, glúteos 18, panturrilha 8. Cada série conta para
+todos os grupos em `musculos` (ex.: supino reto conta para peito e tríceps).
 
-## Variar o treino
+## Alterar exercícios
 
-- **Trocar o treino do dia:** na ficha do dia, toque em "trocar treino" (ou, num dia de descanso, escolha um treino). Vale só para aquele dia.
-- **Trocar um exercício:** toque em "variar" e escolha uma das alternativas. A troca continua nas próximas vezes desse treino até você trocar de novo.
-- As alternativas de cada exercício ficam em `alternativas` no `programa.json`.
+Na ficha do dia, toque em "alterar" no exercício para:
+
+- trocar por uma das alternativas;
+- digitar qualquer outro exercício;
+- mudar o número de séries e as reps;
+- mudar o seu tempo de descanso.
+
+A alteração vale a partir daquele dia e segue nas próximas vezes desse treino. "voltar ao original"
+desfaz. Também dá para trocar o treino inteiro de um dia em "trocar treino".
 
 ## Onde ficam os registros
 
@@ -42,7 +47,8 @@ numa área privada da sua conta, no formato:
   "ex": { "supino-reto-barra": { "rest": "", "sets": [ { "kg": "40", "r": "12", "ok": true } ] } },
   "note": "",
   "escolha": "loA",
-  "trocas": { "0": "agachamento-smith" }
+  "trocas": { "0": "custom:Supino na máquina Hammer" },
+  "ajustes": { "0": { "series": 4, "reps": "5–7" } }
 }
 ```
 
