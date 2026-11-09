@@ -7,18 +7,23 @@ App para celular com um programa Upper/Lower de 5 treinos por semana (~1h).
 
 ## Estrutura do treino
 
-| Dia | Treino | Exercícios |
-|-----|--------|------------|
-| Seg | Upper A (peito e costas) | 6 |
-| Ter | Lower A (quadríceps) | 5 |
-| Qua | Upper B (costas e ombros) | 6 |
-| Qui | Descanso | |
-| Sex | Lower B (posterior e glúteos) | 5 |
-| Sáb | Upper C (ombros e braços) | 6 |
-| Dom | Descanso | |
+Meta: **15 séries válidas por semana para cada grupo muscular** (peito, costas, ombros, bíceps,
+tríceps, quadríceps, posterior, glúteos e panturrilha). Cada série válida conta 1 para cada grupo
+listado em `musculos` do exercício (ex.: agachamento conta para quadríceps e glúteos).
+Aquecimento não conta. O app mostra o placar da semana abaixo do calendário.
 
-Cada exercício tem 3 séries: 1 de aquecimento (~50% da carga) + 2 válidas.
-Compostos: 6–10 reps, 2 min de descanso. Isolados: 10–15 reps, 75 s.
+| Dia | Treino | Exercícios | Séries válidas | Tempo estimado |
+|-----|--------|-----------|----------------|----------------|
+| Seg | Upper A (peito, costas e braços) | 6 | 26 | ~59 min |
+| Ter | Lower A (quadríceps e panturrilha) | 5 | 24 | ~52 min |
+| Qua | Upper B (ombros, costas e braços) | 6 | 26 | ~59 min |
+| Qui | Descanso | | | |
+| Sex | Lower B (posterior e glúteos) | 5 | 25 | ~57 min |
+| Sáb | Upper C (ombros, peito e braços) | 6 | 23 | ~53 min |
+| Dom | Descanso | | | |
+
+Compostos: 1 aquecimento + 3 a 5 séries válidas de 6–10 reps, 90 s de descanso.
+Isolados: 3 a 8 séries válidas de 10–15 reps, 60 s de descanso.
 
 ## Variar o treino
 

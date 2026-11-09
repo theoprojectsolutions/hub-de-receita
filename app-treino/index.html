@@ -98,6 +98,17 @@ button{cursor:pointer}
 .swap .pill{text-transform:none;letter-spacing:0;color:var(--ink)}
 .swap .pill[aria-pressed="true"]{color:var(--surface)}
 .restday .chips{margin-top:8px}
+.vol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px 14px}
+.vol-h{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.vol-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.vol-i{display:flex;flex-direction:column;gap:3px;min-width:0}
+.vol-i span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vol-i b{font-family:var(--display);font-size:22px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.vol-i b small{font-size:14px;color:var(--muted);font-weight:500}
+.vol-i i{display:block;height:4px;border-radius:2px;background:var(--sunk);overflow:hidden}
+.vol-i u{display:block;height:100%;background:var(--upper);text-decoration:none}
+.vol-i.hit u{background:var(--ok)}
+.vol-i em{font-style:normal;font-size:11px;color:var(--muted)}
 .rest-edit{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:8px}
 .rest-edit input{width:64px;height:30px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -157,17 +168,41 @@ function dayRec(s, create){
   if (d) d.ex = d.ex || {};
   return d || null;
 }
-function exRec(s, exId, create){
+/* linhas de um exercício: aquecimento (só nos compostos) + séries válidas */
+function rowsFor(e){
+  const rows = e.tipo === P.aquecimento.so_em ? [{rotulo:P.aquecimento.rotulo, warm:true}] : [];
+  for (let i=1;i<=e.series;i++) rows.push({rotulo:String(i), warm:false});
+  return rows;
+}
+const blank = () => ({kg:'',r:'',ok:false});
+function exRec(s, e, create){
   const d = dayRec(s, create); if (!d) return null;
-  if (!d.ex[exId] && create) d.ex[exId] = {rest:'', sets: P.series.map(()=>({kg:'',r:'',ok:false}))};
-  return d.ex[exId] || null;
+  if (!d.ex[e.id] && create) d.ex[e.id] = {rest:'', sets:[]};
+  const r = d.ex[e.id]; if (!r) return null;
+  if (create) while (r.sets.length < rowsFor(e).length) r.sets.push(blank());
+  return r;
+}
+/* séries válidas feitas e planejadas no dia, por grupo muscular */
+function dayVolume(s, acc){
+  const w = workoutOn(s); if (!w) return;
+  const d = dayRec(s,false);
+  w.exercicios.forEach((_,i)=>{
+    const e = exFor(s,w,i), rows = rowsFor(e), r = d && d.ex[e.id];
+    rows.forEach((row,ri)=>{
+      if (row.warm) return;
+      const ok = !!(r && r.sets[ri] && r.sets[ri].ok);
+      e.musculos.forEach(m=>{ acc[m] = acc[m] || {plan:0, done:0}; acc[m].plan++; if (ok) acc[m].done++; });
+    });
+  });
 }
 function progress(s){
   const w = workoutOn(s); if (!w) return null;
-  const total = w.exercicios.length * P.series.length;
-  let done = 0;
+  let total = 0, done = 0;
   const d = dayRec(s,false);
-  if (d) w.exercicios.forEach((_,i)=>{ const r = d.ex[exFor(s,w,i).id]; if (r) done += r.sets.filter(x=>x.ok).length; });
+  w.exercicios.forEach((_,i)=>{
+    const e = exFor(s,w,i), n = rowsFor(e).length, r = d && d.ex[e.id];
+    total += n; if (r) done += r.sets.slice(0,n).filter(x=>x.ok).length;
+  });
   return {done, total};
 }
 /* exercício de cada posição: escolha do dia, senão a última variação usada nesse treino, senão o original */
@@ -183,7 +218,7 @@ function exFor(s, w, i){
     if (best) pick = S.days[best].trocas[i];
   }
   const o = opts.find(x=>x.id===pick) || opts[0];
-  return Object.assign({}, o, {tipo: base.tipo, opts});
+  return Object.assign({}, o, {tipo: base.tipo, series: base.series, musculos: base.musculos, opts});
 }
 /* últimos números registrados para este exercício antes desta data */
 function lastFor(s, exId){
@@ -263,7 +298,24 @@ function renderCalendar(){
     + todayCard
     + '<div class="cal"><div class="dow">'+DOW_LBL.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="grid">'+cells+'</div>'
     + '<div class="sum"><span>Treinos feitos no mês</span><b>'+done+' / '+planned+'</b></div></div>'
+    + weekPanel()
     + '<p class="status" id="status">'+esc(S.statusText)+'</p>';
+}
+
+function weekPanel(){
+  const t = parse(TODAY), mon = new Date(t); mon.setDate(t.getDate() - (t.getDay()+6)%7);
+  const acc = {};
+  for (let i=0;i<7;i++){ const d = new Date(mon); d.setDate(mon.getDate()+i); dayVolume(iso(d), acc); }
+  const meta = P.meta_semanal;
+  return '<section class="vol"><div class="vol-h"><span>Séries válidas · semana</span><span>meta '+meta+'</span></div><div class="vol-g">'
+    + Object.keys(P.grupos).map(g=>{
+        const v = acc[g] || {plan:0, done:0};
+        const pct = Math.min(100, v.done/meta*100);
+        const off = v.plan !== meta ? ' title="Planejado esta semana: '+v.plan+'"' : '';
+        return '<div class="vol-i'+(v.done>=meta?' hit':'')+'"'+off+'><span>'+P.grupos[g]+'</span><b>'+v.done+'<small>/'+meta+'</small></b>'
+          + '<i><u style="width:'+pct+'%"></u></i>'+(v.plan!==meta?'<em>planejado '+v.plan+'</em>':'')+'</div>';
+      }).join('')
+    + '</div></section>';
 }
 
 function renderDay(s){
@@ -288,23 +340,23 @@ function renderDay(s){
     + (S.pickOpen ? '<div style="margin-top:10px">'+picker+'</div>' : '') + '</div>';
   w.exercicios.forEach((_,i)=>{
     const e = exFor(s,w,i);
-    const pr = P.prescricao[e.tipo], r = exRec(s,e.id,false), lr = lastFor(s, e.id);
-    const sets = r ? r.sets : P.series.map(()=>({kg:'',r:'',ok:false}));
+    const pr = P.prescricao[e.tipo], r = exRec(s,e,false), lr = lastFor(s, e.id), rows = rowsFor(e);
+    const sets = rows.map((_,ri)=> r && r.sets[ri] || blank());
     const complete = sets.every(x=>x.ok);
     const key = s+'-'+e.id;
     const okey = s+'-'+i;
     h += '<article class="ex '+kind(w)+(complete?' complete':'')+'" data-ex="'+e.id+'" data-slot="'+i+'">'
       + '<div class="ex-top"><h2><span>'+(i+1)+'</span>'+esc(e.nome)+'</h2><button class="info" data-info aria-expanded="'+!!S.open[okey]+'">'+(S.open[okey]?'fechar':'variar')+'</button></div>'
-      + '<div class="presc"><b>'+pr.reps+' reps</b> · descanso '+fmtTime((r&&parseInt(r.rest,10))||pr.descanso)+'</div>'
-      + (S.open[okey] ? '<div class="tip">'+esc(e.dica)+'<br>Aquecimento: '+esc(P.series[0].obs)+'.</div>'
+      + '<div class="presc"><b>'+e.series+' × '+pr.reps+'</b>'+(rows[0].warm?' + aquec.':'')+' · descanso '+fmtTime((r&&parseInt(r.rest,10))||pr.descanso)+'</div>'
+      + (S.open[okey] ? '<div class="tip">'+esc(e.dica)+(rows[0].warm?'<br>Aquecimento: '+esc(P.aquecimento.obs)+'.':'')+'<br>Conta para: '+e.musculos.map(m=>P.grupos[m]).join(' e ')+'.</div>'
           + '<div class="swap"><span>Trocar por</span><div class="chips">'
           + e.opts.map(o=>'<button class="pill" data-swap="'+o.id+'" aria-pressed="'+(o.id===e.id)+'">'+esc(o.nome)+'</button>').join('')
           + '</div></div>'
           + '<label class="rest-edit">Meu descanso <input id="rest-'+key+'" data-rest inputmode="numeric" value="'+esc(r&&r.rest||'')+'" placeholder="'+pr.descanso+'"> s</label>' : '')
       + '<div class="rows">';
-    P.series.forEach((sd,si)=>{
-      const x = sets[si] || {kg:'',r:'',ok:false}, lx = lr && lr.sets && lr.sets[si] || {};
-      const warm = sd.tipo === 'aquecimento', nm = warm ? 'aquecimento' : 'série '+sd.rotulo;
+    rows.forEach((sd,si)=>{
+      const x = sets[si], lx = lr && lr.sets && lr.sets[si] || {};
+      const warm = sd.warm, nm = warm ? 'aquecimento' : 'série '+sd.rotulo;
       h += '<div class="row'+(warm?' warm':'')+(x.ok?' ok':'')+'"><span class="lbl">'+sd.rotulo+'</span>'
         + '<input id="kg-'+key+'-'+si+'" data-f="kg" data-i="'+si+'" inputmode="decimal" autocomplete="off" aria-label="Carga '+nm+'" value="'+esc(x.kg)+'" placeholder="'+esc(lx.kg ? lx.kg+' kg' : 'kg')+'">'
         + '<input id="r-'+key+'-'+si+'" data-f="r" data-i="'+si+'" inputmode="numeric" autocomplete="off" aria-label="Repetições '+nm+'" value="'+esc(x.r)+'" placeholder="'+esc(lx.r ? lx.r+' reps' : 'reps')+'">'
@@ -343,14 +395,13 @@ app.addEventListener('click', ev=>{
   }
   const tick = t.closest('[data-tick]');
   if (tick){
-    const r = exRec(s, exId, true), i = +tick.dataset.tick, x = r.sets[i];
+    const e = exFor(s, workoutOn(s), +slot), r = exRec(s, e, true), i = +tick.dataset.tick, x = r.sets[i];
     if (!x.ok){ // completa campos vazios com o que fez da última vez
       tick.parentElement.querySelectorAll('input').forEach(inp=>{ const v = (inp.placeholder.match(/^[\d.,]+/)||[])[0]; if (!inp.value && v) x[inp.dataset.f] = v; });
     }
     x.ok = !x.ok; save(s); render();
     if (x.ok){
-      const e = exFor(s, workoutOn(s), +slot), sd = P.series[i];
-      startTimer(sd.descanso || parseInt(r.rest,10) || P.prescricao[e.tipo].descanso);
+      startTimer(rowsFor(e)[i].warm ? P.aquecimento.descanso : (parseInt(r.rest,10) || P.prescricao[e.tipo].descanso));
     }
   }
 });
@@ -358,7 +409,7 @@ app.addEventListener('input', ev=>{
   const t = ev.target, s = route(); if (!s) return;
   if (t.dataset.note !== undefined){ dayRec(s,true).note = t.value; save(s); return; }
   const exEl = t.closest('[data-ex]'); if (!exEl) return;
-  const r = exRec(s, exEl.dataset.ex, true);
+  const r = exRec(s, exFor(s, workoutOn(s), +exEl.dataset.slot), true);
   if (t.dataset.rest !== undefined) r.rest = t.value.trim();
   else r.sets[+t.dataset.i][t.dataset.f] = t.value.trim();
   save(s);
