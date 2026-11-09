@@ -147,6 +147,11 @@ textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line)
 .timer button{border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit;border-radius:10px;height:40px;padding:0 14px;font-weight:600}
 .timer .prog{position:absolute;top:0;left:0;height:3px;background:var(--ok)}
 .timer.over .clock{color:var(--ok)}
+.timer .clock{flex:none}
+.tlbl{flex:1;min-width:0;font-size:12.5px;line-height:1.3;opacity:.8;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.notif{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.notif p{margin:0;flex:1;min-width:0;font-size:13px;color:var(--muted)}
+.notif button{border:0;border-radius:10px;background:var(--ink);color:var(--surface);font-weight:700;font-size:13px;padding:10px 12px;white-space:nowrap}
 </style>
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -158,6 +163,7 @@ textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line)
   <div class="prog" id="tProg"></div>
   <div class="in">
     <div class="clock" id="tClock">0:00</div>
+    <div class="tlbl" id="tLbl"></div>
     <button id="tAdd">+15s</button>
     <button id="tStop">Pular</button>
   </div>
@@ -202,6 +208,8 @@ function rowsFor(e){
   return rows;
 }
 const blank = () => ({kg:'',r:'',ok:false});
+/* descanso: 3 min se o exercício trabalha quadríceps, 2 min nos demais */
+const restFor = e => (e.musculos || []).includes('quadriceps') ? P.descanso.quadriceps : P.descanso.padrao;
 function exRec(s, e, create){
   const d = dayRec(s, create); if (!d) return null;
   if (!d.ex[e.id] && create) d.ex[e.id] = {rest:'', sets:[]};
@@ -336,6 +344,51 @@ document.addEventListener('visibilitychange', ()=>{
 });
 function initCloud(){ load(); }
 
+/* ---------- Notificações do descanso ---------- */
+const VAPID = 'BE6Oqq8AfPFKNv8NurG9HDWahnqALJBIPGWFJTtA47N7KkWiKTo2tIXpzslv9cRUqKqd63z1HdcGO7x8mYUlbl4';
+const SUBK = 'caderno-treino-push';
+let swReg = null, pushSub = null;
+try { pushSub = JSON.parse(localStorage.getItem(SUBK)) || null; } catch(e){}
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const notifSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+function b64ToU8(v){ const pad = '='.repeat((4 - v.length % 4) % 4); const b = atob((v + pad).replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(b, c=>c.charCodeAt(0)); }
+async function ensureSub(){
+  const reg = swReg || await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToU8(VAPID) });
+  pushSub = sub.toJSON(); try { localStorage.setItem(SUBK, JSON.stringify(pushSub)); } catch(e){}
+  return pushSub;
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').then(r=>{
+  swReg = r;
+  if ('Notification' in window && Notification.permission === 'granted' && 'PushManager' in window) ensureSub().then(()=>render()).catch(()=>{});
+}).catch(()=>{});
+function notifState(){
+  if (!notifSupported) return (isIOS && !standalone) ? 'ios' : 'sem';
+  if (Notification.permission === 'denied') return 'negado';
+  if (Notification.permission === 'granted' && pushSub) return 'ok';
+  return 'ativar';
+}
+async function enableNotif(){
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted'){ await ensureSub(); status('✓ Notificações do descanso ativadas', 'ok'); }
+  } catch(e){ status('Não consegui ativar as notificações neste aparelho.', 'err'); }
+  render();
+}
+function notifBanner(){
+  const st = notifState();
+  if (st === 'ok') return '';
+  const msg = {
+    ativar: 'Receba um aviso quando o descanso acabar, mesmo com o celular bloqueado.',
+    ios: 'No iPhone, o aviso de fim de descanso só funciona com o app na tela de início: toque em Compartilhar → Adicionar à Tela de Início e abra o app por lá.',
+    negado: 'As notificações estão bloqueadas para este site. Libere nos ajustes do navegador para receber o aviso do descanso.',
+    sem: 'Este navegador não envia notificações. O cronômetro continua com som e vibração.'
+  }[st];
+  return '<div class="notif"><p>'+msg+'</p>'+(st === 'ativar' ? '<button data-notif>Ativar notificações</button>' : '')+'</div>';
+}
+
 /* ---------- Telas ---------- */
 const app = document.getElementById('app');
 function route(){ const m = location.hash.match(/^#d-(\d{4}-\d{2}-\d{2})$/); return m ? m[1] : null; }
@@ -374,6 +427,7 @@ function renderCalendar(){
     '<div class="bar"><div class="title">'+MONTHS[m-1]+' <span>'+y+'</span></div>'
     + '<div class="nav"><button class="icon-btn" data-m="-1" aria-label="Mês anterior">‹</button><button class="icon-btn" data-m="1" aria-label="Próximo mês">›</button></div></div>'
     + todayCard
+    + notifBanner()
     + '<div class="cal"><div class="dow">'+DOW_LBL.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="grid">'+cells+'</div>'
     + '<div class="sum"><span>Treinos feitos no mês</span><b>'+done+' / '+planned+'</b></div></div>'
     + weekPanel()
@@ -415,10 +469,10 @@ function renderDay(s){
   const p = progress(s), rec = dayRec(s,false);
   h += '<div class="dayhead '+kind(w)+'"><h1>'+esc(w.nome)+'</h1><p>'+esc(w.foco)+' · '+fmtLong(s)+' · <b>'+p.done+'/'+p.total+'</b>'
     + ' · <button class="info" data-wtoggle aria-expanded="'+!!S.pickOpen+'">trocar treino</button></p>'
-    + (S.pickOpen ? '<div style="margin-top:10px">'+picker+'</div>' : '') + '</div>';
+    + (S.pickOpen ? '<div style="margin-top:10px">'+picker+'</div>' : '') + '</div>' + notifBanner();
   w.exercicios.forEach((_,i)=>{
     const e = exFor(s,w,i);
-    const pr = {descanso: P.descanso[e.tipo]}, r = exRec(s,e,false), lr = lastFor(s, e.id), rows = rowsFor(e);
+    const pr = {descanso: restFor(e)}, r = exRec(s,e,false), lr = lastFor(s, e.id), rows = rowsFor(e);
     const sets = rows.map((_,ri)=> r && r.sets[ri] || blank());
     const complete = sets.every(x=>x.ok);
     const key = s+'-'+e.id;
@@ -454,6 +508,7 @@ function renderDay(s){
 /* ---------- Interações ---------- */
 app.addEventListener('click', ev=>{
   const t = ev.target;
+  if (t.closest('[data-notif]')){ enableNotif(); return; }
   const open = t.closest('[data-open]');
   if (open){ location.hash = 'd-'+open.dataset.open; return; }
   const mv = t.closest('[data-m]');
@@ -499,7 +554,9 @@ app.addEventListener('click', ev=>{
     }
     x.ok = !x.ok; save(s); render();
     if (x.ok){
-      startTimer(rowsFor(e)[i].warm ? P.aquecimento.descanso : (parseInt(r.rest,10) || P.descanso[e.tipo]));
+      const rws = rowsFor(e), nxt = rws[i+1];
+      const label = nxt ? e.nome+' · '+(nxt.warm ? 'aquecimento' : 'série '+nxt.rotulo) : 'próximo exercício';
+      startTimer(rws[i].warm ? P.aquecimento.descanso : (parseInt(r.rest,10) || restFor(e)), label);
     }
   }
 });
@@ -523,19 +580,41 @@ app.addEventListener('keydown', ev=>{ if (ev.key==='Enter' && ev.target.dataset.
 window.addEventListener('hashchange', ()=>{ S.pickOpen = false; render(); window.scrollTo(0,0); });
 
 /* ---------- Cronômetro ---------- */
-let tEnd=0, tTot=0, tInt=null, buzzed=false;
+let tEnd=0, tTot=0, tInt=null, buzzed=false, remId=null, wakeLock=null;
 const $ = id => document.getElementById(id);
-function startTimer(sec){ tTot=sec; tEnd=Date.now()+sec*1000; buzzed=false; $('timer').hidden=false; clearInterval(tInt); tick(); tInt=setInterval(tick,250); }
+function startTimer(sec, label){
+  cancelReminder();
+  tTot=sec; tEnd=Date.now()+sec*1000; buzzed=false; $('timer').hidden=false; $('tLbl').textContent = label ? 'Próximo: '+label : '';
+  clearInterval(tInt); tick(); tInt=setInterval(tick,250);
+  scheduleReminder(sec, label);
+  try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(l=>{ wakeLock = l; }).catch(()=>{}); } catch(e){}
+}
+/* pede ao servidor para mandar a notificação quando o descanso acabar (funciona com o celular bloqueado) */
+function scheduleReminder(sec, label){
+  if (!pushSub || !PIN || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,8); remId = id;
+  fetch('/api/lembrete', { method:'POST', headers:{'content-type':'application/json','x-pin':PIN},
+    body: JSON.stringify({ id, segundos: sec, sub: pushSub, titulo: 'Descanso acabou', texto: label ? 'Próximo: '+label : 'Hora da próxima série.' }) }).catch(()=>{});
+}
+function cancelReminder(){
+  if (!remId) return;
+  const id = remId; remId = null;
+  if (Date.now() < tEnd - 1500) fetch('/api/lembrete', { method:'DELETE', keepalive:true, headers:{'content-type':'application/json','x-pin':PIN}, body: JSON.stringify({ id }) }).catch(()=>{});
+}
 function tick(){
   const left = (tEnd-Date.now())/1000;
   $('timer').classList.toggle('over', left<=0);
   if (left<=0){
     $('tClock').textContent = 'Bora! +'+fmtTime(-left); $('tProg').style.width='100%';
-    if (!buzzed){ buzzed=true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} beep(); }
+    if (!buzzed){
+      buzzed=true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} beep();
+      if (remId) remId = null; // o servidor já mandou a notificação
+      else if (swReg && 'Notification' in window && Notification.permission === 'granted') swReg.showNotification('Descanso acabou', { body: $('tLbl').textContent || 'Hora da próxima série.', tag:'descanso', renotify:true, icon:'/icon.png' }).catch(()=>{});
+    }
     if (left < -60) stopTimer();
   } else { $('tClock').textContent = fmtTime(left); $('tProg').style.width = (100-left/tTot*100)+'%'; }
 }
-function stopTimer(){ clearInterval(tInt); $('timer').hidden = true; }
+function stopTimer(){ cancelReminder(); clearInterval(tInt); $('timer').hidden = true; try { wakeLock && wakeLock.release(); } catch(e){} wakeLock = null; }
 $('tStop').onclick = stopTimer;
 $('tAdd').onclick = ()=>{ tEnd+=15000; tTot+=15; buzzed=false; tick(); };
 let actx=null;

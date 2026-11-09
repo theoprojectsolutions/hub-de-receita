@@ -36,6 +36,17 @@ Na ficha do dia, toque em "alterar" no exercício para:
 A alteração vale a partir daquele dia e segue nas próximas vezes desse treino. "voltar ao original"
 desfaz. Também dá para trocar o treino inteiro de um dia em "trocar treino".
 
+## Cronômetro de descanso e notificações
+
+- Descanso: **3 min** em exercícios que trabalham quadríceps (agachamento, leg press, extensora, afundo)
+  e **2 min** nos demais (`descanso` no `programa.json`). O aquecimento continua com 1 min.
+- Ao marcar ✓ numa série, o cronômetro começa e o app pede à API `api/lembrete.js` para mandar um
+  web push quando o tempo acabar. O aviso chega mesmo com o celular bloqueado ou o app fechado.
+  Pular ou começar outro descanso cancela o aviso anterior.
+- `sw.js` é o service worker que mostra a notificação.
+- Chaves VAPID nas variáveis `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` do projeto na Vercel.
+- iPhone: as notificações só funcionam com o app adicionado à tela de início (iOS 16.4 ou mais novo).
+
 ## Onde ficam os registros
 
 App publicado na Vercel: https://caderno-de-treino-six.vercel.app (projeto `caderno-de-treino`).

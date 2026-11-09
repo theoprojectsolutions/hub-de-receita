@@ -749,7 +749,8 @@
     }
   },
   "descanso": {
-    "composto": 90,
-    "isolado": 60
+    "quadriceps": 180,
+    "padrao": 120,
+    "obs": "3 min em exercícios que trabalham quadríceps; 2 min nos demais."
   }
 }
