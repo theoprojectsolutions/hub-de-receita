@@ -90,6 +90,14 @@ button{cursor:pointer}
 .row.warm .tick{height:38px}
 .row.ok .tick{background:var(--ok);border-color:var(--ok);color:#fff}
 .row.ok input{background:var(--ok-soft);border-color:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;line-height:1.2;text-align:left}
+.pill.up,.pill.lo{color:var(--k)}
+.pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.swap{margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.swap .pill{text-transform:none;letter-spacing:0;color:var(--ink)}
+.swap .pill[aria-pressed="true"]{color:var(--surface)}
+.restday .chips{margin-top:8px}
 .rest-edit{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:8px}
 .rest-edit input{width:64px;height:30px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -129,7 +137,9 @@ const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
 const dowKey = d => DOW[(d.getDay()+6)%7];
 const TODAY = iso(new Date());
-const workoutOn = s => { const id = P.semana[dowKey(parse(s))]; return id ? Object.assign({id}, P.treinos[id]) : null; };
+const scheduled = s => P.semana[dowKey(parse(s))] || null;
+/* treino do dia: o da semana, ou o que você escolheu para aquele dia */
+const workoutOn = s => { const r = S.days[s]; const id = (r && 'escolha' in r) ? r.escolha : scheduled(s); return id && P.treinos[id] ? Object.assign({id}, P.treinos[id]) : null; };
 const kind = w => w && w.tipo === 'lower' ? 'lo' : 'up';
 const fmtLong = s => { const d = parse(s); return DOW_LBL[(d.getDay()+6)%7]+', '+d.getDate()+' de '+MONTHS[d.getMonth()].toLowerCase(); };
 const fmtTime = sec => { sec = Math.max(0,Math.round(sec)); return Math.floor(sec/60)+':'+pad(sec%60); };
@@ -157,20 +167,39 @@ function progress(s){
   const total = w.exercicios.length * P.series.length;
   let done = 0;
   const d = dayRec(s,false);
-  if (d) for (const e of w.exercicios){ const r = d.ex[e.id]; if (r) done += r.sets.filter(x=>x.ok).length; }
+  if (d) w.exercicios.forEach((_,i)=>{ const r = d.ex[exFor(s,w,i).id]; if (r) done += r.sets.filter(x=>x.ok).length; });
   return {done, total};
 }
-/* último treino igual antes desta data */
-function lastSession(s, workoutId){
+/* exercício de cada posição: escolha do dia, senão a última variação usada nesse treino, senão o original */
+function exFor(s, w, i){
+  const base = w.exercicios[i];
+  const opts = [{id:base.id, nome:base.nome, dica:base.dica}].concat(base.alternativas || []);
+  let pick = null;
+  const r = S.days[s];
+  if (r && r.trocas && r.trocas[i]) pick = r.trocas[i];
+  else {
+    let best = null;
+    for (const k in S.days){ const d = S.days[k]; if (k < s && d.treino === w.id && d.trocas && d.trocas[i] && (!best || k > best)) best = k; }
+    if (best) pick = S.days[best].trocas[i];
+  }
+  const o = opts.find(x=>x.id===pick) || opts[0];
+  return Object.assign({}, o, {tipo: base.tipo, opts});
+}
+/* últimos números registrados para este exercício antes desta data */
+function lastFor(s, exId){
   let best = null;
-  for (const k in S.days){ if (k < s && S.days[k].treino === workoutId && (!best || k > best)) best = k; }
-  return best ? S.days[best] : null;
+  for (const k in S.days){
+    const r = S.days[k].ex && S.days[k].ex[exId];
+    if (k < s && r && r.sets && r.sets.some(x=>x.kg||x.r) && (!best || k > best)) best = k;
+  }
+  return best ? S.days[best].ex[exId] : null;
 }
 
 /* ---------- Nuvem: cada dia é um documento privado ---------- */
 let col = null; const timers = new Map(); const dirty = new Set(); let chain = Promise.resolve();
 function status(t){ S.statusText = t; const el = document.getElementById('status'); if (el) el.textContent = t; }
 function save(s){
+  if (S.days[s]){ const w = workoutOn(s); S.days[s].treino = w ? w.id : null; }
   saveLocal();
   if (S.mode !== 'cloud'){ status('Salvo neste aparelho'); return; }
   dirty.add(s); status('Salvando…');
@@ -241,24 +270,36 @@ function renderDay(s){
   const w = workoutOn(s);
   const d = parse(s);
   let h = '<button class="back" data-back>‹ '+MONTHS[d.getMonth()]+'</button>';
+  const cur = w ? w.id : 'rest';
+  const picker = '<div class="chips" role="group" aria-label="Escolher treino do dia">'
+    + Object.keys(P.treinos).map(id=>'<button class="pill '+kind(P.treinos[id])+'" data-pick="'+id+'" aria-pressed="'+(cur===id)+'">'+esc(P.treinos[id].nome)+'</button>').join('')
+    + '<button class="pill" data-pick="rest" aria-pressed="'+(cur==='rest')+'">Descanso</button></div>';
   if (!w){
     const rec = dayRec(s,false);
-    h += '<div class="restday"><h1>Descanso</h1><p>'+fmtLong(s)+'. Recupere: sono, proteína e, se quiser, uma caminhada leve.</p></div>'
+    h += '<div class="restday"><h1>Descanso</h1><p>'+fmtLong(s)+'. Recupere: sono, proteína e, se quiser, uma caminhada leve.</p>'
+      + '<p style="margin-top:14px">Vai treinar hoje? Escolha o treino:</p>'+picker+'</div>'
       + '<textarea id="note-'+s+'" data-note placeholder="Anotações do dia">'+esc(rec&&rec.note||'')+'</textarea>'
       + '<p class="status" id="status">'+esc(S.statusText)+'</p>';
     app.innerHTML = h; return;
   }
-  const p = progress(s), last = lastSession(s, w.id), rec = dayRec(s,false);
-  h += '<div class="dayhead '+kind(w)+'"><h1>'+esc(w.nome)+'</h1><p>'+esc(w.foco)+' · '+fmtLong(s)+' · <b>'+p.done+'/'+p.total+'</b></p></div>';
-  w.exercicios.forEach((e,i)=>{
-    const pr = P.prescricao[e.tipo], r = exRec(s,e.id,false), lr = last && last.ex && last.ex[e.id];
+  const p = progress(s), rec = dayRec(s,false);
+  h += '<div class="dayhead '+kind(w)+'"><h1>'+esc(w.nome)+'</h1><p>'+esc(w.foco)+' · '+fmtLong(s)+' · <b>'+p.done+'/'+p.total+'</b>'
+    + ' · <button class="info" data-wtoggle aria-expanded="'+!!S.pickOpen+'">trocar treino</button></p>'
+    + (S.pickOpen ? '<div style="margin-top:10px">'+picker+'</div>' : '') + '</div>';
+  w.exercicios.forEach((_,i)=>{
+    const e = exFor(s,w,i);
+    const pr = P.prescricao[e.tipo], r = exRec(s,e.id,false), lr = lastFor(s, e.id);
     const sets = r ? r.sets : P.series.map(()=>({kg:'',r:'',ok:false}));
     const complete = sets.every(x=>x.ok);
     const key = s+'-'+e.id;
-    h += '<article class="ex '+kind(w)+(complete?' complete':'')+'" data-ex="'+e.id+'">'
-      + '<div class="ex-top"><h2><span>'+(i+1)+'</span>'+esc(e.nome)+'</h2><button class="info" data-info aria-expanded="'+!!S.open[key]+'">'+(S.open[key]?'fechar':'dica')+'</button></div>'
+    const okey = s+'-'+i;
+    h += '<article class="ex '+kind(w)+(complete?' complete':'')+'" data-ex="'+e.id+'" data-slot="'+i+'">'
+      + '<div class="ex-top"><h2><span>'+(i+1)+'</span>'+esc(e.nome)+'</h2><button class="info" data-info aria-expanded="'+!!S.open[okey]+'">'+(S.open[okey]?'fechar':'variar')+'</button></div>'
       + '<div class="presc"><b>'+pr.reps+' reps</b> · descanso '+fmtTime((r&&parseInt(r.rest,10))||pr.descanso)+'</div>'
-      + (S.open[key] ? '<div class="tip">'+esc(e.dica)+'<br>Aquecimento: '+esc(P.series[0].obs)+'.</div>'
+      + (S.open[okey] ? '<div class="tip">'+esc(e.dica)+'<br>Aquecimento: '+esc(P.series[0].obs)+'.</div>'
+          + '<div class="swap"><span>Trocar por</span><div class="chips">'
+          + e.opts.map(o=>'<button class="pill" data-swap="'+o.id+'" aria-pressed="'+(o.id===e.id)+'">'+esc(o.nome)+'</button>').join('')
+          + '</div></div>'
           + '<label class="rest-edit">Meu descanso <input id="rest-'+key+'" data-rest inputmode="numeric" value="'+esc(r&&r.rest||'')+'" placeholder="'+pr.descanso+'"> s</label>' : '')
       + '<div class="rows">';
     P.series.forEach((sd,si)=>{
@@ -284,9 +325,22 @@ app.addEventListener('click', ev=>{
   const mv = t.closest('[data-m]');
   if (mv){ const [y,m] = S.month.split('-').map(Number); const d = new Date(y, m-1+Number(mv.dataset.m), 1); S.month = d.getFullYear()+'-'+pad(d.getMonth()+1); render(); return; }
   if (t.closest('[data-back]')){ const s = route(); if (s) S.month = s.slice(0,7); location.hash = ''; return; }
+  const pick = t.closest('[data-pick]');
+  if (pick){
+    const s = route(), id = pick.dataset.pick === 'rest' ? null : pick.dataset.pick;
+    const rec = dayRec(s, true);
+    if (id === scheduled(s)) delete rec.escolha; else rec.escolha = id;
+    rec.treino = id; S.pickOpen = false; save(s); render(); return;
+  }
+  if (t.closest('[data-wtoggle]')){ S.pickOpen = !S.pickOpen; render(); return; }
   const exEl = t.closest('[data-ex]'); if (!exEl) return;
-  const s = route(), exId = exEl.dataset.ex;
-  if (t.closest('[data-info]')){ const k = s+'-'+exId; S.open[k] = !S.open[k]; render(); return; }
+  const s = route(), exId = exEl.dataset.ex, slot = exEl.dataset.slot;
+  if (t.closest('[data-info]')){ const k = s+'-'+slot; S.open[k] = !S.open[k]; render(); return; }
+  const sw = t.closest('[data-swap]');
+  if (sw){
+    const rec = dayRec(s, true); rec.trocas = rec.trocas || {}; rec.trocas[slot] = sw.dataset.swap;
+    save(s); render(); return;
+  }
   const tick = t.closest('[data-tick]');
   if (tick){
     const r = exRec(s, exId, true), i = +tick.dataset.tick, x = r.sets[i];
@@ -295,7 +349,7 @@ app.addEventListener('click', ev=>{
     }
     x.ok = !x.ok; save(s); render();
     if (x.ok){
-      const e = workoutOn(s).exercicios.find(q=>q.id===exId), sd = P.series[i];
+      const e = exFor(s, workoutOn(s), +slot), sd = P.series[i];
       startTimer(sd.descanso || parseInt(r.rest,10) || P.prescricao[e.tipo].descanso);
     }
   }
@@ -309,7 +363,7 @@ app.addEventListener('input', ev=>{
   else r.sets[+t.dataset.i][t.dataset.f] = t.value.trim();
   save(s);
 });
-window.addEventListener('hashchange', ()=>{ render(); window.scrollTo(0,0); });
+window.addEventListener('hashchange', ()=>{ S.pickOpen = false; render(); window.scrollTo(0,0); });
 
 /* ---------- Cronômetro ---------- */
 let tEnd=0, tTot=0, tInt=null, buzzed=false;
