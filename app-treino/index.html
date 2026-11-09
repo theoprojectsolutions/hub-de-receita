@@ -1,11 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14181D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="manifest" href="/manifest.json">
 <title>Caderno de Treino</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: uma coluna para celular. Tela 1 = calendário do mês; tela 2 = ficha do dia. Azul de anilha marca Upper, vermelho marca Lower. */
 :root{
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   --bg:#EEF0F3; --surface:#FFFFFF; --sunk:#F4F6F8; --ink:#14181D; --muted:#69727E; --line:#DCE1E7;
   --upper:#1D4ED0; --upper-soft:#E5ECFB; --lower:#C3302A; --lower-soft:#F9E6E4;
   --ok:#1B8048; --ok-soft:#E2F3E9;
@@ -37,7 +47,13 @@ button{cursor:pointer}
 .title span{color:var(--muted);font-weight:600}
 .nav{display:flex;gap:6px}
 .icon-btn{border:1px solid var(--line);background:var(--surface);min-width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:20px;line-height:1;padding:0 10px}
-.status{font-size:12px;color:var(--muted);margin:0}
+.status{font-size:13px;color:var(--muted);margin:0}
+.status.ok{color:var(--ok);font-weight:600}
+.status.err{color:var(--lower);font-weight:600}
+.pin{display:flex;flex-direction:column;gap:12px;margin-top:12vh}
+.pin p{margin:0;color:var(--muted)}
+.pin input{height:52px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:24px;text-align:center;letter-spacing:.3em}
+.pin button{height:52px;border:0;border-radius:12px;background:var(--ink);color:var(--surface);font-weight:700;font-size:16px}
 
 /* Card de hoje */
 .today{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-align:left;width:100%}
@@ -132,6 +148,9 @@ textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line)
 .timer .prog{position:absolute;top:0;left:0;height:3px;background:var(--ok)}
 .timer.over .clock{color:var(--ok)}
 </style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
 
 <div class="wrap" id="app"><p class="status">Carregando…</p></div>
 
@@ -247,51 +266,91 @@ function lastFor(s, exId){
   return best ? S.days[best].ex[exId] : null;
 }
 
-/* ---------- Nuvem: cada dia é um documento privado ---------- */
-let col = null; const timers = new Map(); const dirty = new Set(); let chain = Promise.resolve();
-function status(t){ S.statusText = t; const el = document.getElementById('status'); if (el) el.textContent = t; }
+/* ---------- Banco de dados (API na Vercel) ----------
+   Toda alteração entra numa fila guardada no celular e só sai dela quando o banco confirma a gravação. */
+const PEND = 'caderno-treino-pendentes', PINK = 'caderno-treino-pin';
+let pending = new Set(); try { pending = new Set(JSON.parse(localStorage.getItem(PEND)) || []); } catch(e){}
+const savePend = () => { try { localStorage.setItem(PEND, JSON.stringify([...pending])); } catch(e){} };
+let PIN = ''; try { PIN = localStorage.getItem(PINK) || ''; } catch(e){}
+const timers = new Map(); let flushing = false, retryT = null, loaded = false;
+
+function status(t, kind){ S.statusText = t; S.statusKind = kind || ''; const el = document.getElementById('status'); if (el){ el.textContent = t; el.className = 'status '+S.statusKind; } }
+function syncStatus(){
+  if (!pending.size) status('✓ Tudo salvo no banco de dados', 'ok');
+  else status(pending.size+(pending.size>1?' dias aguardando':' dia aguardando')+' envio ao banco…', 'wait');
+}
+async function api(method, body){
+  const r = await fetch('/api/dados', { method, cache:'no-store', keepalive: method === 'PUT',
+    headers:{'content-type':'application/json','x-pin':PIN}, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401){ const e = new Error('pin'); e.pin = true; throw e; }
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
 function save(s){
   if (S.days[s]){ const w = workoutOn(s); S.days[s].treino = w ? w.id : null; }
-  saveLocal();
-  if (S.mode !== 'cloud'){ status('Salvo neste aparelho'); return; }
-  dirty.add(s); status('Salvando…');
+  saveLocal(); pending.add(s); savePend(); status('Salvando…', 'wait');
   clearTimeout(timers.get(s));
-  timers.set(s, setTimeout(()=>{
-    timers.delete(s);
-    const body = JSON.parse(JSON.stringify(S.days[s]));
-    chain = chain.then(()=>col.doc(s).set(body)).then(()=>{
-      if (!timers.has(s)) dirty.delete(s);
-      if (!timers.size) status('Salvo na nuvem');
-    }).catch(()=>status('Não salvou na nuvem; ficou neste aparelho'));
-  }, 700));
+  timers.set(s, setTimeout(()=>{ timers.delete(s); flush(); }, 600));
 }
-async function initCloud(){
+async function flush(){
+  if (flushing || !PIN || !loaded) return;
+  flushing = true; clearTimeout(retryT);
   try{
-    if (!window.claude || !window.claude.use) throw 0;
-    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
-    const uid = user ? await user.id() : null;
-    if (!db || !uid) throw 0;
-    col = db.collection('data/users/'+uid);
-    let first = true;
-    const slow = setTimeout(()=>{ if (first) status('Sem resposta da nuvem; salvando neste aparelho'); }, 10000);
-    col.onSnapshot(snap=>{
-      if (first && snap.metadata.fromCache) return;
-      const remote = {};
-      snap.docs.forEach(d=>{ if (/^\d{4}-\d{2}-\d{2}$/.test(d.id)) remote[d.id] = d.data(); });
-      for (const id in remote) if (!dirty.has(id)) S.days[id] = JSON.parse(JSON.stringify(remote[id]));
-      const wasFirst = first; first = false; clearTimeout(slow); S.mode = 'cloud';
-      if (wasFirst){ for (const id in S.days) if (!(id in remote)) save(id); if (!timers.size) status('Salvo na nuvem'); }
-      saveLocal();
-      const a = document.activeElement;
-      if (!(a && /INPUT|TEXTAREA/.test(a.tagName))) render();
-    }, ()=>{ clearTimeout(slow); S.mode = 'local'; status('Nuvem indisponível; salvando neste aparelho'); });
-  }catch(e){ S.mode = 'local'; status('Salvo só neste aparelho'); }
+    for (const s of [...pending]){
+      if (timers.has(s)) continue;
+      const snap = JSON.stringify(S.days[s] || null);
+      await api('PUT', { dia:s, dados: JSON.parse(snap) });
+      if (JSON.stringify(S.days[s] || null) === snap){ pending.delete(s); savePend(); }
+    }
+    syncStatus();
+  }catch(e){
+    if (e.pin){ askPin('PIN incorreto. Digite de novo.'); }
+    else { status('Sem conexão. '+pending.size+' dia(s) guardado(s) no celular; envio automático quando a internet voltar.', 'err'); retryT = setTimeout(flush, 15000); }
+  }finally{
+    flushing = false;
+    if ([...pending].some(s=>!timers.has(s)) && !retryT && !S.needPin) setTimeout(flush, 300);
+  }
 }
+async function load(){
+  if (!PIN){ askPin(); return; }
+  status('Carregando do banco de dados…', 'wait');
+  try{
+    const j = await api('GET');
+    for (const s in j.dias) if (!pending.has(s)) S.days[s] = j.dias[s];
+    loaded = true; saveLocal();
+    const a = document.activeElement;
+    if (!(a && /INPUT|TEXTAREA/.test(a.tagName))) render();
+    if (pending.size) flush(); else syncStatus();
+  }catch(e){
+    if (e.pin) askPin(S.pinTried ? 'PIN incorreto. Digite de novo.' : undefined);
+    else { status('Sem conexão: mostrando o que está no celular. Vou tentar de novo.', 'err'); setTimeout(load, 15000); }
+  }
+}
+function askPin(msg){ S.needPin = msg || 'Digite o PIN do seu caderno de treino.'; render(); }
+window.addEventListener('online', ()=>{ loaded ? flush() : load(); });
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState === 'hidden'){ timers.forEach((t,s)=>{ clearTimeout(t); timers.delete(s); }); flush(); }
+  else if (loaded && !pending.size) load();
+});
+function initCloud(){ load(); }
 
 /* ---------- Telas ---------- */
 const app = document.getElementById('app');
 function route(){ const m = location.hash.match(/^#d-(\d{4}-\d{2}-\d{2})$/); return m ? m[1] : null; }
-function render(){ if (!P) return; const d = route(); d ? renderDay(d) : renderCalendar(); }
+function render(){ if (!P) return; if (S.needPin) return renderPin(); const d = route(); d ? renderDay(d) : renderCalendar(); }
+function renderPin(){
+  app.innerHTML = '<form class="pin" id="pinForm"><div class="title">Caderno de Treino</div><p>'+esc(S.needPin)+'</p>'
+    + '<input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" aria-label="PIN" required>'
+    + '<button type="submit">Entrar</button></form>';
+  const i = document.getElementById('pinInput'); if (i) i.focus();
+}
+app.addEventListener('submit', ev=>{
+  if (ev.target.id !== 'pinForm') return;
+  ev.preventDefault();
+  PIN = document.getElementById('pinInput').value.trim();
+  try { localStorage.setItem(PINK, PIN); } catch(e){}
+  S.needPin = null; S.pinTried = true; app.innerHTML = '<p class="status">Entrando…</p>'; load();
+});
 
 function renderCalendar(){
   const [y,m] = S.month.split('-').map(Number);
@@ -316,7 +375,7 @@ function renderCalendar(){
     + '<div class="cal"><div class="dow">'+DOW_LBL.map(x=>'<span>'+x+'</span>').join('')+'</div><div class="grid">'+cells+'</div>'
     + '<div class="sum"><span>Treinos feitos no mês</span><b>'+done+' / '+planned+'</b></div></div>'
     + weekPanel()
-    + '<p class="status" id="status">'+esc(S.statusText)+'</p>';
+    + '<p class="status '+(S.statusKind||'')+'" id="status">'+esc(S.statusText)+'</p>';
 }
 
 function weekPanel(){
@@ -348,7 +407,7 @@ function renderDay(s){
     h += '<div class="restday"><h1>Descanso</h1><p>'+fmtLong(s)+'. Recupere: sono, proteína e, se quiser, uma caminhada leve.</p>'
       + '<p style="margin-top:14px">Vai treinar hoje? Escolha o treino:</p>'+picker+'</div>'
       + '<textarea id="note-'+s+'" data-note placeholder="Anotações do dia">'+esc(rec&&rec.note||'')+'</textarea>'
-      + '<p class="status" id="status">'+esc(S.statusText)+'</p>';
+      + '<p class="status '+(S.statusKind||'')+'" id="status">'+esc(S.statusText)+'</p>';
     app.innerHTML = h; return;
   }
   const p = progress(s), rec = dayRec(s,false);
@@ -386,7 +445,7 @@ function renderDay(s){
     h += '</div></article>';
   });
   h += '<textarea id="note-'+s+'" data-note placeholder="Anotações do treino">'+esc(rec&&rec.note||'')+'</textarea>'
-    + '<p class="status" id="status">'+esc(S.statusText)+'</p>';
+    + '<p class="status '+(S.statusKind||'')+'" id="status">'+esc(S.statusText)+'</p>';
   app.innerHTML = h;
 }
 
@@ -485,3 +544,6 @@ fetch('programa.json').then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(j=>
   P = j; render(); initCloud();
 }).catch(()=>{ app.innerHTML = '<p class="status">Não consegui carregar o programa de treino. Recarregue a página.</p>'; });
 </script>
+
+</body>
+</html>

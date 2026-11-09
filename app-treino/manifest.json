@@ -1,0 +1,9 @@
+{
+  "name": "Caderno de Treino",
+  "short_name": "Treino",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF0F3",
+  "theme_color": "#14181D",
+  "icons": [{ "src": "/icon.png", "sizes": "512x512", "type": "image/png" }]
+}
