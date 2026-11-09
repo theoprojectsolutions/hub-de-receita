@@ -1,19 +1,18 @@
 // API do Caderno de Treino: grava e lê os treinos no Vercel Blob (armazenamento privado).
-// Os dados ficam em um arquivo JSON por mês: treinos/AAAA-MM.json -> { "AAAA-MM-DD": { ...registro do dia } }
-import { put, list, get, BlobPreconditionFailedError } from '@vercel/blob';
+// Cada dia é um arquivo próprio: dias/AAAA-MM-DD.json. Assim uma gravação nunca apaga outro dia.
+import { put, list, get, del } from '@vercel/blob';
 
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
-const PASTA = 'treinos/';
-const arquivoDoMes = dia => PASTA + dia.slice(0, 7) + '.json';
+const PASTA = 'dias/';
 
 async function lerArquivo(pathname) {
   const r = await get(pathname, { access: 'private', useCache: false });
-  if (!r || r.statusCode !== 200) return { dados: {}, etag: null };
-  const texto = await new Response(r.stream).text();
-  return { dados: JSON.parse(texto || '{}'), etag: r.blob.etag };
+  if (!r || r.statusCode !== 200) return null;
+  return JSON.parse((await new Response(r.stream).text()) || 'null');
 }
 
-async function lerTudo() {
+// desde: só baixa os dias gravados a partir desse instante (o app guarda o último cursor).
+async function ler(desde) {
   const arquivos = [];
   let cursor;
   do {
@@ -21,33 +20,24 @@ async function lerTudo() {
     arquivos.push(...r.blobs);
     cursor = r.hasMore ? r.cursor : undefined;
   } while (cursor);
-  const dias = {};
-  const meses = await Promise.all(arquivos.filter(b => b.pathname.endsWith('.json')).map(b => lerArquivo(b.pathname)));
-  for (const m of meses) Object.assign(dias, m.dados);
-  return dias;
-}
-
-async function gravarDia(dia, registro) {
-  const pathname = arquivoDoMes(dia);
-  // Lê o mês, troca só o dia e grava de volta. ifMatch impede que duas gravações ao mesmo tempo se apaguem.
-  for (let tentativa = 0; tentativa < 5; tentativa++) {
-    const { dados, etag } = await lerArquivo(pathname);
-    if (registro === null) delete dados[dia]; else dados[dia] = registro;
-    try {
-      await put(pathname, JSON.stringify(dados), {
-        access: 'private',
-        allowOverwrite: true,
-        addRandomSuffix: false,
-        contentType: 'application/json',
-        cacheControlMaxAge: 60,
-        ...(etag ? { ifMatch: etag } : {}),
-      });
-      return;
-    } catch (e) {
-      if (!(e instanceof BlobPreconditionFailedError)) throw e;
-    }
+  const limite = desde ? new Date(desde).getTime() : 0;
+  let maisRecente = desde || null;
+  const existentes = [];
+  const baixar = [];
+  for (const b of arquivos) {
+    const m = b.pathname.match(/^dias\/(\d{4}-\d{2}-\d{2})\.json$/);
+    if (!m) continue;
+    existentes.push(m[1]);
+    const t = new Date(b.uploadedAt).getTime();
+    if (!maisRecente || t > new Date(maisRecente).getTime()) maisRecente = new Date(t).toISOString();
+    if (t >= limite) baixar.push([m[1], b.pathname]);
   }
-  throw new Error('Conflito de gravação persistente');
+  const dias = {};
+  await Promise.all(baixar.map(async ([dia, pathname]) => {
+    const dados = await lerArquivo(pathname);
+    if (dados !== null) dias[dia] = dados;
+  }));
+  return { dias, existentes, cursor: maisRecente };
 }
 
 export default async function handler(req, res) {
@@ -57,14 +47,23 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      return res.status(200).json({ dias: await lerTudo() });
+      const desde = typeof req.query?.desde === 'string' && !isNaN(Date.parse(req.query.desde)) ? req.query.desde : null;
+      return res.status(200).json(await ler(desde));
     }
     if (req.method === 'PUT') {
       const corpo = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       const { dia, dados } = corpo;
       if (!DIA.test(dia || '')) return res.status(400).json({ erro: 'Data inválida' });
-      if (JSON.stringify(dados ?? null).length > 200000) return res.status(413).json({ erro: 'Registro grande demais' });
-      await gravarDia(dia, dados ?? null);
+      const pathname = PASTA + dia + '.json';
+      if (dados === null || dados === undefined) {
+        await del(pathname).catch(() => {});
+        return res.status(200).json({ ok: true, dia, apagado: true });
+      }
+      const json = JSON.stringify(dados);
+      if (json.length > 200000) return res.status(413).json({ erro: 'Registro grande demais' });
+      await put(pathname, json, {
+        access: 'private', allowOverwrite: true, addRandomSuffix: false, contentType: 'application/json',
+      });
       return res.status(200).json({ ok: true, dia });
     }
     res.setHeader('Allow', 'GET, PUT');

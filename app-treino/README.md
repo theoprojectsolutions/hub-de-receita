@@ -38,13 +38,20 @@ desfaz. Também dá para trocar o treino inteiro de um dia em "trocar treino".
 
 ## Onde ficam os registros
 
-Cada dia de treino é salvo como um documento (`AAAA-MM-DD`) no banco de dados do app,
-numa área privada da sua conta, no formato:
+App publicado na Vercel: https://caderno-de-treino-six.vercel.app (projeto `caderno-de-treino`).
+
+- O app pede um PIN na primeira vez (variável de ambiente `APP_PIN` no projeto da Vercel).
+- `api/dados.js` grava cada dia como um arquivo próprio (`dias/AAAA-MM-DD.json`) no Vercel Blob privado
+  `caderno-de-treino-dados`. Só a API, com o token do projeto, lê esses arquivos.
+- No celular, toda alteração entra numa fila e só sai dela quando a API confirma a gravação.
+  Sem internet, o app avisa e reenvia sozinho depois.
+
+Formato de um dia:
 
 ```json
 {
   "treino": "upA",
-  "ex": { "supino-reto-barra": { "rest": "", "sets": [ { "kg": "40", "r": "12", "ok": true } ] } },
+  "ex": { "supino-reto-halt": { "rest": "", "sets": [ { "kg": "40", "r": "12", "ok": true } ] } },
   "note": "",
   "escolha": "loA",
   "trocas": { "0": "custom:Supino na máquina Hammer" },
@@ -52,4 +59,8 @@ numa área privada da sua conta, no formato:
 }
 ```
 
-Se a nuvem não responder, o app salva no próprio aparelho e envia depois.
+### Publicar uma nova versão
+
+Os arquivos desta pasta são a raiz do projeto na Vercel (`index.html`, `programa.json`, `manifest.json`,
+`package.json`, `api/dados.js`). A Vercel ainda não está ligada ao GitHub; dá para ligar em
+Project Settings → Git, com Root Directory `app-treino`.

@@ -232,7 +232,6 @@ function progress(s){
   });
   return {done, total};
 }
-/* exercício de cada posição: escolha do dia, senão a última variação usada nesse treino, senão o original */
 /* valor de uma posição do treino: o do dia, senão o último usado nesse treino */
 function inherited(s, w, field, i){
   const r = S.days[s];
@@ -268,19 +267,19 @@ function lastFor(s, exId){
 
 /* ---------- Banco de dados (API na Vercel) ----------
    Toda alteração entra numa fila guardada no celular e só sai dela quando o banco confirma a gravação. */
-const PEND = 'caderno-treino-pendentes', PINK = 'caderno-treino-pin';
+const PEND = 'caderno-treino-pendentes', PINK = 'caderno-treino-pin', CUR = 'caderno-treino-cursor';
 let pending = new Set(); try { pending = new Set(JSON.parse(localStorage.getItem(PEND)) || []); } catch(e){}
 const savePend = () => { try { localStorage.setItem(PEND, JSON.stringify([...pending])); } catch(e){} };
 let PIN = ''; try { PIN = localStorage.getItem(PINK) || ''; } catch(e){}
-const timers = new Map(); let flushing = false, retryT = null, loaded = false;
+const timers = new Map(); let flushing = false, retryT = null, loaded = false, lastLoad = 0;
 
 function status(t, kind){ S.statusText = t; S.statusKind = kind || ''; const el = document.getElementById('status'); if (el){ el.textContent = t; el.className = 'status '+S.statusKind; } }
 function syncStatus(){
   if (!pending.size) status('✓ Tudo salvo no banco de dados', 'ok');
   else status(pending.size+(pending.size>1?' dias aguardando':' dia aguardando')+' envio ao banco…', 'wait');
 }
-async function api(method, body){
-  const r = await fetch('/api/dados', { method, cache:'no-store', keepalive: method === 'PUT',
+async function api(method, body, desde){
+  const r = await fetch('/api/dados' + (desde ? '?desde=' + encodeURIComponent(desde) : ''), { method, cache:'no-store', keepalive: method === 'PUT',
     headers:{'content-type':'application/json','x-pin':PIN}, body: body ? JSON.stringify(body) : undefined });
   if (r.status === 401){ const e = new Error('pin'); e.pin = true; throw e; }
   if (!r.ok) throw new Error('HTTP '+r.status);
@@ -290,7 +289,7 @@ function save(s){
   if (S.days[s]){ const w = workoutOn(s); S.days[s].treino = w ? w.id : null; }
   saveLocal(); pending.add(s); savePend(); status('Salvando…', 'wait');
   clearTimeout(timers.get(s));
-  timers.set(s, setTimeout(()=>{ timers.delete(s); flush(); }, 600));
+  timers.set(s, setTimeout(()=>{ timers.delete(s); flush(); }, 2500));
 }
 async function flush(){
   if (flushing || !PIN || !loaded) return;
@@ -315,9 +314,12 @@ async function load(){
   if (!PIN){ askPin(); return; }
   status('Carregando do banco de dados…', 'wait');
   try{
-    const j = await api('GET');
+    let desde = null; try { desde = localStorage.getItem(CUR); } catch(e){}
+    if (!Object.keys(S.days).length) desde = null;
+    const j = await api('GET', null, desde);
     for (const s in j.dias) if (!pending.has(s)) S.days[s] = j.dias[s];
-    loaded = true; saveLocal();
+    loaded = true; lastLoad = Date.now(); saveLocal();
+    try { if (j.cursor) localStorage.setItem(CUR, j.cursor); } catch(e){}
     const a = document.activeElement;
     if (!(a && /INPUT|TEXTAREA/.test(a.tagName))) render();
     if (pending.size) flush(); else syncStatus();
@@ -330,7 +332,7 @@ function askPin(msg){ S.needPin = msg || 'Digite o PIN do seu caderno de treino.
 window.addEventListener('online', ()=>{ loaded ? flush() : load(); });
 document.addEventListener('visibilitychange', ()=>{
   if (document.visibilityState === 'hidden'){ timers.forEach((t,s)=>{ clearTimeout(t); timers.delete(s); }); flush(); }
-  else if (loaded && !pending.size) load();
+  else if (loaded && !pending.size && Date.now() - lastLoad > 5*60*1000) load();
 });
 function initCloud(){ load(); }
 
