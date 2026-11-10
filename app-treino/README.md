@@ -47,6 +47,17 @@ desfaz. Também dá para trocar o treino inteiro de um dia em "trocar treino".
 - Chaves VAPID nas variáveis `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` do projeto na Vercel.
 - iPhone: as notificações só funcionam com o app adicionado à tela de início (iOS 16.4 ou mais novo).
 
+## Fotos, descanso real e ordem dos exercícios
+
+- **Fotos:** cada exercício tem o botão "Foto" (abre a câmera). A foto é reduzida no celular
+  (até 1280 px, JPEG) e salva no Blob privado em `fotos/AAAA-MM-DD/<exercicio>-<hora>.jpg`
+  pela API `api/fotos.js`. Tocar na miniatura abre a foto; dá para apagar (dois toques).
+- **Descanso real:** ao apertar "Pular" no cronômetro, o app grava em `desc` (segundos) quanto
+  você descansou depois daquela série e mostra "Descanso real 1:42 · meta 2:00" embaixo dela
+  (em vermelho se passou mais de 15 s da meta).
+- **Ordem:** segure a alça ⋮⋮ à esquerda do nome e arraste. A nova ordem fica salva em `ordem`
+  e segue nas próximas vezes desse treino.
+
 ## Onde ficam os registros
 
 App publicado na Vercel: https://caderno-de-treino-six.vercel.app (projeto `caderno-de-treino`).
