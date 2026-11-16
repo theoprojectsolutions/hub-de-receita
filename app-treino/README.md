@@ -58,6 +58,16 @@ desfaz. Também dá para trocar o treino inteiro de um dia em "trocar treino".
 - **Ordem:** segure a alça ⋮⋮ à esquerda do nome e arraste. A nova ordem fica salva em `ordem`
   e segue nas próximas vezes desse treino.
 
+## Histórico de volume
+
+No calendário, "Ver histórico de todas as semanas" abre a tela `#historico`:
+gráfico de séries válidas por semana (últimas 12) e, para cada semana desde o primeiro
+registro, treinos feitos, séries válidas, volume (kg × reps) e séries por grupo muscular
+comparadas com a meta. "ver dias" lista os treinos da semana e abre cada um.
+
+Exercícios digitados à mão ("Outro exercício") contam para o grupo reconhecido pelo nome
+(ex.: "Hack" → quadríceps e glúteos, "Pull down" → costas). Adutora não conta para nenhum grupo.
+
 ## Onde ficam os registros
 
 App publicado na Vercel: https://caderno-de-treino-six.vercel.app (projeto `caderno-de-treino`).
