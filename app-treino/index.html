@@ -237,7 +237,9 @@ const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
 const dowKey = d => DOW[(d.getDay()+6)%7];
 const TODAY = iso(new Date());
-const scheduled = s => P.semana[dowKey(parse(s))] || null;
+/* divisão da semana vigente naquela data (as semanas antigas mantêm a divisão de antes) */
+const semanaDe = s => { const l = P.semanas || [{desde:'0000-00-00', semana:P.semana}]; return (l.find(x=>s >= x.desde) || l[l.length-1]).semana; };
+const scheduled = s => semanaDe(s)[dowKey(parse(s))] || null;
 /* treino do dia: o da semana, ou o que você escolheu para aquele dia */
 const workoutOn = s => { const r = S.days[s]; const id = (r && 'escolha' in r) ? r.escolha : scheduled(s); return id && P.treinos[id] ? Object.assign({id}, P.treinos[id]) : null; };
 const kind = w => w && w.tipo === 'lower' ? 'lo' : 'up';
@@ -590,7 +592,7 @@ function renderDay(s){
   let h = '<button class="back" data-back>‹ '+MONTHS[d.getMonth()]+'</button>';
   const cur = w ? w.id : 'rest';
   const picker = '<div class="chips" role="group" aria-label="Escolher treino do dia">'
-    + Object.keys(P.treinos).map(id=>'<button class="pill '+kind(P.treinos[id])+'" data-pick="'+id+'" aria-pressed="'+(cur===id)+'">'+esc(P.treinos[id].nome)+'</button>').join('')
+    + Object.keys(P.treinos).filter(id=>!P.treinos[id].arquivado || id===cur).map(id=>'<button class="pill '+kind(P.treinos[id])+'" data-pick="'+id+'" aria-pressed="'+(cur===id)+'">'+esc(P.treinos[id].nome)+'</button>').join('')
     + '<button class="pill" data-pick="rest" aria-pressed="'+(cur==='rest')+'">Descanso</button></div>';
   if (!w){
     const rec = dayRec(s,false);

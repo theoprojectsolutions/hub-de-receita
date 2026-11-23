@@ -5,24 +5,22 @@ App para celular com um programa Upper/Lower de 5 treinos por semana (~1h).
 - `programa.json`: os dados do programa (dias da semana, treinos, exercícios, séries, reps e descanso). Para trocar um exercício ou o dia de um treino, edite este arquivo.
 - `index.html`: o app. Abre num calendário mensal; tocar num dia abre o treino daquele dia.
 
-## Estrutura do treino
+## Estrutura do treino (desde 23/11/2026)
 
-| Dia | Treino | Exercícios | Séries válidas |
-|-----|--------|-----------|----------------|
-| Seg | Upper A | Supino reto halteres 3×6–8 · Remada curvada 3×6–8 · Supino inclinado halteres 3×8–10 · Puxada aberta 3×8–10 · Elevação lateral 4×10–12 · Tríceps pulley 4×10–12 | 20 |
-| Ter | Lower A | Agachamento livre 4×6–8 · Leg press 45° 4×8–10 · Extensora 3×10–12 · Mesa flexora 4×10–12 · Gêmeos em pé 4×12–15 | 19 |
-| Qua | Upper B | Desenvolvimento halteres 4×8–10 · Remada baixa neutra 4×8–10 · Peck deck 3×10–12 · Rosca direta halteres 4×8–10 · Tríceps testa 4×10–12 · Elevação lateral polia 4×12–15 | 23 |
-| Qui | Descanso | | |
-| Sex | Lower B | Stiff 4×8–10 · Afundo 3×10/perna · Cadeira flexora 4×10–12 · Elevação pélvica 3×8–10 · Gêmeos sentado 4×12–15 | 18 |
-| Sáb | Upper C | Serrote 4×8–10 · Supino reto halteres 3×8–10 · Puxada neutra 3×8–10 · Elevação lateral 4×12–15 · Rosca martelo 4×10–12 · Crucifixo invertido 4×12–15 | 22 |
-| Dom | Descanso | | |
+| Dia | Treino | Exercícios |
+|-----|--------|------------|
+| Seg | **Push** | Supino reto máquina 4×6–10 · Supino inclinado halteres 3×8–10 · Crossover 3×10–12 · Elevação lateral máquina 4×12–15 · Elevação frontal 3×10–12 · Tríceps pulley 4×10–12 |
+| Ter | Lower A | (igual ao anterior) |
+| Qua | **Pull** | Puxada aberta 4×8–10 · Remada curvada Smith 3×8–10 · Remada baixa neutra 3×8–10 · Crucifixo invertido 3×12–15 · Rosca direta halteres 3×8–10 · Rosca martelo 3×10–12 |
+| Qui | Descanso | |
+| Sex | Lower B | (igual ao anterior) |
+| Sáb | **Upper** | Supino inclinado máquina · Pull down · Serrote · Elevação lateral polia · Tríceps testa · Tríceps francês · Rosca Scott (7 × 3 séries) |
+| Dom | Descanso | |
 
-Exercícios compostos têm 1 série de aquecimento antes das válidas (não conta no volume).
-Descanso: 90 s nos compostos, 60 s nos isolados.
+Volume semanal de cima (séries válidas): peito 13, costas 16, ombros 13, bíceps 9, tríceps 10.
 
-Volume semanal por grupo (séries válidas): peito 12, costas 17, ombros 20, bíceps 8,
-tríceps 11, quadríceps 14, posterior 12, glúteos 18, panturrilha 8. Cada série conta para
-todos os grupos em `musculos` (ex.: supino reto conta para peito e tríceps).
+`programa.json` guarda as divisões por data em `semanas`: antes de 23/11 vale a divisão antiga
+(Upper A/B/C, marcados como `arquivado`), então o histórico das primeiras semanas continua certo.
 
 ## Alterar exercícios
 
