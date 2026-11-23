@@ -1,5 +1,5 @@
 {
-  "versao": 6,
+  "versao": 7,
   "nome": "Upper / Lower 5x por semana",
   "meta_semanal": 15,
   "grupos": {
@@ -133,26 +133,26 @@
           ]
         },
         {
-          "id": "elevacao-frontal",
-          "nome": "Elevação frontal com halteres",
+          "id": "triceps-overhead-polia",
+          "nome": "Tríceps acima da cabeça na polia",
           "tipo": "isolado",
           "series": 3,
           "reps": "10–12",
           "musculos": [
-            "ombros"
+            "triceps"
           ],
-          "alvo": "Deltoide anterior",
-          "dica": "Suba até a linha dos olhos, sem balançar o tronco.",
+          "alvo": "Tríceps · cabeça longa",
+          "dica": "De costas para a polia, cotovelos apontando para frente, alongue bem atrás da cabeça.",
           "alternativas": [
             {
-              "id": "elevacao-frontal-polia",
-              "nome": "Elevação frontal na polia",
-              "dica": "Tensão constante, braços quase retos."
+              "id": "triceps-frances",
+              "nome": "Tríceps francês com halter",
+              "dica": "Cotovelos para cima, alongue atrás da cabeça."
             },
             {
-              "id": "elevacao-frontal-anilha",
-              "nome": "Elevação frontal com anilha",
-              "dica": "Segure a anilha pelas laterais, suba até a linha dos olhos."
+              "id": "triceps-testa-halt",
+              "nome": "Tríceps testa com halteres (ou polia)",
+              "dica": "Cotovelos apontando para cima, alongue bem atrás."
             }
           ]
         },
@@ -673,6 +673,30 @@
           ]
         },
         {
+          "id": "desenv-halteres",
+          "nome": "Desenvolvimento sentado com halteres",
+          "tipo": "composto",
+          "series": 3,
+          "reps": "8–10",
+          "musculos": [
+            "ombros"
+          ],
+          "alvo": "Deltoide anterior e lateral",
+          "dica": "Cotovelos levemente à frente, não trave no topo. Pare com 2 reps sobrando.",
+          "alternativas": [
+            {
+              "id": "desenv-maquina",
+              "nome": "Desenvolvimento na máquina",
+              "dica": "Lombar apoiada, desça até a linha do queixo."
+            },
+            {
+              "id": "arnold",
+              "nome": "Desenvolvimento Arnold",
+              "dica": "Gire as palmas durante a subida."
+            }
+          ]
+        },
+        {
           "id": "elevacao-lateral-polia",
           "nome": "Elevação lateral na polia",
           "tipo": "isolado",
@@ -717,30 +741,6 @@
               "id": "supino-fechado",
               "nome": "Supino fechado",
               "dica": "Mãos na largura dos ombros, cotovelos rentes."
-            }
-          ]
-        },
-        {
-          "id": "triceps-frances",
-          "nome": "Tríceps francês com halter",
-          "tipo": "isolado",
-          "series": 3,
-          "reps": "10–12",
-          "musculos": [
-            "triceps"
-          ],
-          "alvo": "Tríceps · cabeça longa",
-          "dica": "Cotovelos para cima, alongue atrás da cabeça.",
-          "alternativas": [
-            {
-              "id": "triceps-overhead-polia",
-              "nome": "Tríceps acima da cabeça na polia",
-              "dica": "De costas para a polia, alongue bem."
-            },
-            {
-              "id": "triceps-coice",
-              "nome": "Tríceps coice com halter",
-              "dica": "Braço paralelo ao chão, estenda até o fim."
             }
           ]
         },

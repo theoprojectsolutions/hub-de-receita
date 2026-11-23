@@ -9,12 +9,12 @@ App para celular com um programa Upper/Lower de 5 treinos por semana (~1h).
 
 | Dia | Treino | Exercícios |
 |-----|--------|------------|
-| Seg | **Push** | Supino reto máquina 4×6–10 · Supino inclinado halteres 3×8–10 · Crossover 3×10–12 · Elevação lateral máquina 4×12–15 · Elevação frontal 3×10–12 · Tríceps pulley 4×10–12 |
+| Seg | **Push** | Supino reto máquina 4×6–10 · Supino inclinado halteres 3×8–10 · Crossover 3×10–12 · Elevação lateral máquina 4×12–15 · Tríceps acima da cabeça na polia 3×10–12 · Tríceps pulley 4×10–12 |
 | Ter | Lower A | (igual ao anterior) |
 | Qua | **Pull** | Puxada aberta 4×8–10 · Remada curvada Smith 3×8–10 · Remada baixa neutra 3×8–10 · Crucifixo invertido 3×12–15 · Rosca direta halteres 3×8–10 · Rosca martelo 3×10–12 |
 | Qui | Descanso | |
 | Sex | Lower B | (igual ao anterior) |
-| Sáb | **Upper** | Supino inclinado máquina · Pull down · Serrote · Elevação lateral polia · Tríceps testa · Tríceps francês · Rosca Scott (7 × 3 séries) |
+| Sáb | **Upper** | Supino inclinado máquina · Pull down · Serrote · Desenvolvimento sentado halteres · Elevação lateral polia · Tríceps testa · Rosca Scott (7 × 3 séries) |
 | Dom | Descanso | |
 
 Volume semanal de cima (séries válidas): peito 13, costas 16, ombros 13, bíceps 9, tríceps 10.
